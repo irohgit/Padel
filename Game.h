@@ -6,14 +6,33 @@
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
 
-// FRONT OF HOUSE (public): What the theatre manager (main) may ask for
-// 1.The production: use C++ default constructor
-//   . Destructor:  Packdown, organized by the venue. Conductor or TheatreManager is not worried.
-//   . Overload destructor to ensure no copies of it
-// 2.Theatre Manager Commands
-//  .Initialize: Soundcheck, get everything ready
-//  .Runloop: "Begin the show"
-//  .Shutdown: packdown curtain call
+class Game{
+public: // FRONT OF HOUSE (public): What the theatre manager (main) may ask for
+    Game() = default; // use C++ Default Constructor
+    ~Game(); // Create destructor when shutting down game
+    Game(const Game&) = delete; // Block copy constructor 
+    Game& operator=(const Game&) = delete; // Block Assignment Operator
+    
+    bool Initialize(); // Needs to return true for main to check 
+    void RunLoop();
+    void ShutDown();
+private:
+    // CUE SHEET: Conductor (RunLoop) calls, in order
+    void ProcessInput();
+    float ComputeDeltaTime();
+    void UpdateGame(float dt);
+    void GenerateOutput();
+
+    // PRODUCTION: What the show needs to run
+    // What It Has
+    SDL_Window* Window = nullptr;
+    SDL_Renderer* Renderer = nullptr;
+    // What it Knows
+    bool bIsSdlStarted;
+    bool bIsRunning;
+    float LastCounter;
+
+};
 
 
 // BACKSTAGE (private): Only production

@@ -1,14 +1,27 @@
-#pragma once
+#include "Game.h"
 
-
+// SCORE: Namespace and Constants 
 namespace{
     const int WINDOW_WIDTH = 1920;
     const int WINDOW_HEIGHT = 1080;
     const float MAX_DELTA = 0.05f;
 }
-// SCORE: Namespace and Constants 
-// 1,2 WINDOW_WIDTH,WINDOW_HEIGHT
-// 3, MAX_DELTA
+
+bool Game::Initialize(){
+    // Ask , Check, Record
+    // 1. Start SDL: Ask, check, record pattern
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){ 
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        return false;
+    } // Success is zero as per SDL2 SDL_Init Documentation
+
+    // TODO (1) : record SDL start success bool
+    // TODO (2) : Create the window
+    // TODO (3) : Create the renderer
+    // TODO (4) : Start Performance Counter, set game to Is running True
+
+    return true;
+}
 
 // SOUNDCHECK: Destructor, Initialize and Construction
 // 1 Game Destructor //
