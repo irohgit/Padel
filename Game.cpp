@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "Theme.h"
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -53,6 +54,23 @@ bool Game::Initialize(){
     bIsRunning = true;
     return true;
 }
+void Game::ProcessInput(){
+    // 1. Events
+    SDL_Event Event;
+    while (SDL_PollEvent(&Event)){
+        if(Event.type == SDL_QUIT){bIsRunning = false;}
+        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE  ){bIsRunning = false;}// Check if Escape is pressed then quit game
+    }
+
+}
+void Game::UpdateGame(float DeltaTime){
+    (void)DeltaTime;
+}
+void Game::GenerateOutput(){
+    Theme::SetDrawColor(Renderer, Theme::Color::MENU_BACKGROUND);
+    SDL_RenderClear(Renderer);
+    SDL_RenderPresent(Renderer);
+}
 
 void Game::RunLoop(){
     while (bIsRunning){
@@ -82,15 +100,6 @@ float Game::ComputeDeltaTime(){
     LastCounter = Now;
     if(DeltaTime > MAX_DELTA){DeltaTime = MAX_DELTA;}
     return DeltaTime;
-}
-void Game::ProcessInput(){
-    // 1. Events
-    SDL_Event Event;
-    while (SDL_PollEvent(&Event)){
-        if(Event.type == SDL_QUIT){bIsRunning = false;}
-        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE  ){bIsRunning = false;}// Check if Escape is pressed then quit game
-    }
-
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //
