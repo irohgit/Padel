@@ -6,6 +6,7 @@ namespace{
     constexpr int WINDOW_HEIGHT = 1080;
     constexpr float MAX_DELTA = 0.05f;
     constexpr const char *WINDOW_TITLE = "Padel";
+    constexpr const int GRAPHICS_DRIVER = -1; // -1 Makes SDL choose
 }
 
 bool Game::Initialize(){
@@ -19,19 +20,21 @@ bool Game::Initialize(){
     // Successful Initiation  : record SDL start success bool
     bIsSdlStarted = true; 
     
-    // TODO (2) : Create the window
+/*
+extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,int x, int y, int w, int h, Uint32 flags);
+extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
+*/ 
     Window = SDL_CreateWindow(WINDOW_TITLE,
                                 SDL_WINDOW_FULLSCREEN_DESKTOP,
                                 SDL_WINDOW_FULLSCREEN_DESKTOP,
                                 WINDOW_WIDTH,
                                 WINDOW_HEIGHT,
                                 SDL_WINDOW_FULLSCREEN);
-/*
- extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,int x, int y, int w, int h, Uint32 flags);
-*/ 
     
-    // TODO (3) : Create the renderer
-    // TODO (4) : Start Performance Counter, set game to Is running True
+    // Use flags ACCELERATED to draw on GPU, use PresentVSYNC so that SDL_RendererPresent will wait for monitor refresh to avoid screen tearing
+    Renderer = SDL_CreateRenderer(Window,GRAPHICS_DRIVER,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+
+    // TODO (4) : Start Performance Counter, set game to Is running TrueACCELERA
 
     return true;
 }
