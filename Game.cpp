@@ -6,38 +6,61 @@ namespace{
     constexpr int WINDOW_HEIGHT = 1080;
     constexpr float MAX_DELTA = 0.05f;
     constexpr const char *WINDOW_TITLE = "Padel";
-    constexpr const int GRAPHICS_DRIVER = -1; // -1 Makes SDL choose
+    constexpr const int GRAPHICS_DRIVER = -1; // -1 Makes SDL choose the graphics driver for us
+
+    // Templates for Guards
+    template <typename T>
+    bool NullGuard(const T* Resource, const char* CreatorName) // NullGuard: True if the resource exists. If false, then it will log which SDL call failed.
+    {
+        if(Resource) return true;
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"%s failed: %s", CreatorName, SDL_GetError());
+        return false;
+    }
+
+    bool SDLGuard(int Result, const char* CallName)
+    {
+        if (Result == 0) return true;
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"%s failed: %s", CallName, SDL_GetError());
+        return false;
+    }
+    
+    // Templates for packdown
+    template <typename T, typename ReleaseFunction>
+    void Release(T*& Resource, ReleaseFunction Destroy)
+    {
+        if(Resource){Destroy(Resource); Resource = nullptr;}
+    }
+    void Release(bool& bStarted, void(*Shutdown)())
+    {
+        if(bStarted){Shutdown(); bStarted = false;}
+    }
+
 }
 
 bool Game::Initialize(){
-    // Ask , Check, Record
     // 1. Start SDL: Ask, check, record pattern
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0){ 
-        SDL_Log("SDL_Init failed: %s", SDL_GetError());
-        return false;
-    } // Success is zero as per SDL2 SDL_Init Documentation
+    if (!SDLGuard(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER), "SDL_Init")) return false;// Success is zero as per SDL2 SDL_Init Documentation
+    bIsSdlStarted = true; // Successful Initiation  : record SDL start success bool
+                          
+    Window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WINDOW_WIDTH, WINDOW_HEIGHT,SDL_WINDOW_FULLSCREEN_DESKTOP);
+    if (!NullGuard(Window, "SDL_CreateWindow")) return false;
 
-    // Successful Initiation  : record SDL start success bool
-    bIsSdlStarted = true; 
-    
-/*
-extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,int x, int y, int w, int h, Uint32 flags);
-extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
-*/ 
-    Window = SDL_CreateWindow(WINDOW_TITLE,
-                                SDL_WINDOW_FULLSCREEN_DESKTOP,
-                                SDL_WINDOW_FULLSCREEN_DESKTOP,
-                                WINDOW_WIDTH,
-                                WINDOW_HEIGHT,
-                                SDL_WINDOW_FULLSCREEN);
-    
-    // Use flags ACCELERATED to draw on GPU, use PresentVSYNC so that SDL_RendererPresent will wait for monitor refresh to avoid screen tearing
     Renderer = SDL_CreateRenderer(Window,GRAPHICS_DRIVER,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
-
-    // TODO (4) : Start Performance Counter, set game to Is running TrueACCELERA
-
+    if (!NullGuard(Renderer, "SDL_CreateRenderer")) return false;
+    if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
+        
+    LastCounter = SDL_GetPerformanceCounter() ; 
+    bIsRunning = true;
     return true;
 }
+
+void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Game
+    Release(Renderer, SDL_DestroyRenderer);//1. Renderer: If It exists,destroy the Renderer
+    Release(Window, SDL_DestroyWindow);//2. Window: If it exists, destroy the Window
+    Release(bIsSdlStarted,SDL_Quit);//3. If started, run SDL_Quit and reset bIsSdlStarted to false
+}
+
+Game::~Game(){ShutDown();} // Safety call. Destructor will ShutDown
 
 // SOUNDCHECK: Destructor, Initialize and Construction
 // 1 Game Destructor //
@@ -53,4 +76,13 @@ extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateRenderer(SDL_Window * window, i
 // 1. Destroy Renderer
 // 2. Destroy Window
 // 3. Destroy Game
+
+/*
+   extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,int x, int y, int w, int h, Uint32 flags);
+   extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
+   extern DECLSPEC int SDLCALL SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h);
+   extern DECLSPEC Uint64 SDLCALL SDL_GetPerformanceCounter(void);
+   Use flags ACCELERATED to draw on GPU, use PresentVSYNC so that SDL_RendererPresent will wait for monitor refresh to avoid screen tearing
+*/ 
+
 

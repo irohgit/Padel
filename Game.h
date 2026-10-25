@@ -30,7 +30,7 @@ private:
     // What it Knows
     bool bIsSdlStarted;
     bool bIsRunning;
-    float LastCounter;
+    Uint64 LastCounter;
 
 };
 
