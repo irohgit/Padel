@@ -54,6 +54,18 @@ bool Game::Initialize(){
     return true;
 }
 
+void Game::RunLoop(){
+    while (bIsRunning){
+
+    //1. Cues
+    ProcessInput();
+    //2. Measure deltaTime
+    float DeltaTime = ComputeDeltaTime();
+    UpdateGame(DeltaTime);
+    //3. Output Simulation 
+    GenerateOutput();
+    }
+}
 void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Game
     Release(Renderer, SDL_DestroyRenderer);//1. Renderer: If It exists,destroy the Renderer
     Release(Window, SDL_DestroyWindow);//2. Window: If it exists, destroy the Window
@@ -62,7 +74,26 @@ void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Ga
 
 Game::~Game(){ShutDown();} // Safety call. Destructor will ShutDown
 
+// HELPER FUNCTIONS
+float Game::ComputeDeltaTime(){
+    const Uint64 Now = SDL_GetPerformanceCounter();
+    float DeltaTime = static_cast<float>(Now-LastCounter)
+                    / static_cast<float>(SDL_GetPerformanceFrequency());
+    LastCounter = Now;
+    if(DeltaTime > MAX_DELTA){DeltaTime = MAX_DELTA;}
+    return DeltaTime;
+}
+void Game::ProcessInput(){
+    // 1. Events
+    SDL_Event Event;
+    while (SDL_PollEvent(&Event)){
+        if(Event.type == SDL_QUIT){bIsRunning = false;}
+        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE  ){bIsRunning = false;}// Check if Escape is pressed then quit game
+    }
+
+}
 // SOUNDCHECK: Destructor, Initialize and Construction
+//
 // 1 Game Destructor //
 // 2 Initialize
 
@@ -71,11 +102,6 @@ Game::~Game(){ShutDown();} // Safety call. Destructor will ShutDown
 // 2. Update The State (play the note)
 // 3. Output (Audience hears it/sees it)
 
-
-// PACKDOWN: Pack down in reverse order, audience leaves first then band, then lights off
-// 1. Destroy Renderer
-// 2. Destroy Window
-// 3. Destroy Game
 
 /*
    extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,int x, int y, int w, int h, Uint32 flags);
