@@ -2,9 +2,10 @@
 
 // SCORE: Namespace and Constants 
 namespace{
-    const int WINDOW_WIDTH = 1920;
-    const int WINDOW_HEIGHT = 1080;
-    const float MAX_DELTA = 0.05f;
+    constexpr int WINDOW_WIDTH = 1920;
+    constexpr int WINDOW_HEIGHT = 1080;
+    constexpr float MAX_DELTA = 0.05f;
+    constexpr const char *WINDOW_TITLE = "Padel";
 }
 
 bool Game::Initialize(){
@@ -15,8 +16,20 @@ bool Game::Initialize(){
         return false;
     } // Success is zero as per SDL2 SDL_Init Documentation
 
-    // TODO (1) : record SDL start success bool
+    // Successful Initiation  : record SDL start success bool
+    bIsSdlStarted = true; 
+    
     // TODO (2) : Create the window
+    Window = SDL_CreateWindow(WINDOW_TITLE,
+                                SDL_WINDOW_FULLSCREEN_DESKTOP,
+                                SDL_WINDOW_FULLSCREEN_DESKTOP,
+                                WINDOW_WIDTH,
+                                WINDOW_HEIGHT,
+                                SDL_WINDOW_FULLSCREEN);
+/*
+ extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,int x, int y, int w, int h, Uint32 flags);
+*/ 
+    
     // TODO (3) : Create the renderer
     // TODO (4) : Start Performance Counter, set game to Is running True
 
