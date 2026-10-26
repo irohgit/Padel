@@ -1,5 +1,5 @@
 #include "Game.h"
-#include "Theme.h"
+#include "Theme.h" // Pragma once in Theme.h will skip this include. Added here for readability 
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -67,7 +67,7 @@ void Game::UpdateGame(float DeltaTime){
     (void)DeltaTime;
 }
 void Game::GenerateOutput(){
-    Theme::SetDrawColor(Renderer, Theme::Color::MENU_BACKGROUND);
+    Theme::SetDrawColor(Renderer, CourtColour);
     SDL_RenderClear(Renderer);
     SDL_RenderPresent(Renderer);
 }
