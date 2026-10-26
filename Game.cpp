@@ -2,6 +2,8 @@
 #include "Theme.h" // Pragma once in Theme.h will skip this include. Added here for readability 
 #include "Player.h"
 #include <random>
+#include <algorithm>
+#include <cmath>
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -15,12 +17,21 @@ namespace{
     constexpr float PADDLE_MARGIN = 100.0f; // Distance from screen edge
     constexpr float PADDLE_MIN_Y = PADDLE_HEIGHT / 2.0f;
     constexpr float PADDLE_MAX_Y = WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f;
-    constexpr float BALL_SIZE = 20.0f;
-    constexpr float BALL_SPEED_X = 250.0f;
+    constexpr float BALL_SIZE = 50.0f;
+    constexpr float BALL_SERVE_SPEED_X = 250.0f;
+    constexpr float BALL_SPEED_X = 400.0f;
     constexpr float BALL_SPEED_Y = 250.0f;
     constexpr float BALL_MIN_Y = BALL_SIZE / 2.0f;
     constexpr float BALL_MAX_Y = WINDOW_HEIGHT - BALL_SIZE / 2.0f;
+    constexpr float BALL_SPEEDUP = 1.05f; // Each return will speed up ball by 5%
+    constexpr float BALL_MAX_SPEED_X = 1000.0f;
+    constexpr float BALL_MAX_SPEED_Y = 350.0f;
+    constexpr float HIT_ZONE = PADDLE_MARGIN + PADDLE_WIDTH / 2.0f + BALL_SIZE + 20.0f;
+
     
+    bool OverlapsVertically(float BallY, float PaddleY){
+        return std::abs(BallY - PaddleY) <= PADDLE_HEIGHT/2.0f + BALL_SIZE /2.0f;
+    }
     // Template for Drawing On Screen an Object with a root that is centered
     template <typename T>
     void DrawCentred(SDL_Renderer* Renderer, const T& Object, float Width, float Height){
@@ -167,10 +178,13 @@ void Game::ServeBall(){
  // Start ball in the middle of the court and randomize X Direction and Y Velocityat 
  const float DirectionX = CoinFlip() ? 1.0f : -1.0f;
  const float VelocityY = RandomRange(-BALL_SPEED_Y, BALL_SPEED_Y);
- Ball = {WINDOW_WIDTH/2.0f, WINDOW_HEIGHT/2.0f, DirectionX * BALL_SPEED_X, VelocityY};  
+ Ball = {WINDOW_WIDTH/2.0f, WINDOW_HEIGHT/2.0f, DirectionX * BALL_SERVE_SPEED_X, VelocityY};  
 }
 
 void Game::MoveBall(float DeltaTime){
+    //Remember X before moving
+    const float PreviousX = Ball.X;
+
     //Place updated Velocities into Ball.X and Y
     Ball.X += Ball.VelocityX * DeltaTime;
     Ball.Y += Ball.VelocityY * DeltaTime;
@@ -178,8 +192,39 @@ void Game::MoveBall(float DeltaTime){
     if(Ball.Y < BALL_MIN_Y){ Ball.Y = BALL_MIN_Y; Ball.VelocityY = -Ball.VelocityY;}
     else if(Ball.Y > BALL_MAX_Y){ Ball.Y = BALL_MAX_Y; Ball.VelocityY = -Ball.VelocityY;}
 
-    // When ball leaves left or right side of window serve again (temporary)
+    //Start checking for collisions only when Ball is in the HitZone
+    if(Ball.X < HIT_ZONE || Ball.X > WINDOW_WIDTH - HIT_ZONE){ CheckPaddleHits(PreviousX);}
     if(Ball.X < 0.0f || Ball.X > WINDOW_WIDTH){ ServeBall();}
+}
+
+void Game::CheckPaddleHits(float PreviousX){
+    const float Direction = (Ball.VelocityX < 0.0f) ? -1.0f : 1.0f;
+    const PaddleState& Paddle = (Direction < 0.0f) ? LeftPlayer.GetPaddle() : RightPlayer.GetPaddle();
+    const float HalfBall = BALL_SIZE/2.0f;
+
+    const float PaddleFace = Paddle.X - Direction * PADDLE_WIDTH /2.0f;
+    const float PreviousEdge = PreviousX + Direction * HalfBall;
+    const float CurrentEdge = Ball.X + Direction * HalfBall;
+
+    const bool bIsColliding = (PreviousEdge - PaddleFace) * Direction <= 0.0f
+                       &&(CurrentEdge - PaddleFace) * Direction >= 0.0f;
+
+    if (bIsColliding && OverlapsVertically(Ball.Y,Paddle.Y)){
+        ReturnBall(Paddle,PaddleFace - Direction * HalfBall);
+    }
+
+}
+
+//void Game::ReturnBall(const PaddleState &Paddle, float ContactX)
+void Game::ReturnBall(const PaddleState &Paddle, float ContactX){
+    Ball.X = ContactX;
+    Ball.VelocityX = std::clamp(-Ball.VelocityX * BALL_SPEEDUP,
+                                -BALL_MAX_SPEED_X,
+                                BALL_MAX_SPEED_X);
+    const float Offset = std::clamp((Ball.Y - Paddle.Y) / (PADDLE_HEIGHT /2.0f),
+                                     -1.0f,
+                                     1.0f);
+    Ball.VelocityY = Offset * BALL_MAX_SPEED_Y;
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //

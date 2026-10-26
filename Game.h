@@ -24,10 +24,12 @@ private:
     // CUE SHEET: Conductor (RunLoop) calls, in order
     float ComputeDeltaTime();
 
+    void CheckPaddleHits(float PreviousX);
     void GenerateOutput();
     void MoveBall(float DeltaTime);
     void MovePlayers(float DeltaTime);
     void ProcessInput();
+    void ReturnBall(const PaddleState& Paddle, float ContactX);
     void ServeBall();
     void SpawnPlayers();
     void UpdateGame(float DeltaTime);
