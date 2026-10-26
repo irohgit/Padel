@@ -21,7 +21,7 @@ namespace{
     constexpr float PADDLE_MAX_Y = WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f;
     constexpr float BALL_SIZE = 50.0f;
     constexpr float BALL_SERVE_SPEED_X = 250.0f;
-    constexpr float BALL_SPEED_X = 400.0f;
+    constexpr float BALL_SPEED_X = 450.0f;
     constexpr float BALL_SPEED_Y = 250.0f;
     constexpr float BALL_MIN_Y = BALL_SIZE / 2.0f;
     constexpr float BALL_MAX_Y = WINDOW_HEIGHT - BALL_SIZE / 2.0f;
@@ -121,6 +121,7 @@ bool Game::Initialize(){
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
     Events.Subscribe(&Logger);
+    Events.Subscribe(&Overlay);
     ServeBall(CoinFlip() ? 1.0f : -1.0f);
     bIsRunning = true;
 
@@ -134,7 +135,8 @@ void Game::ProcessInput(){
     SDL_Event Event;
     while (SDL_PollEvent(&Event)){
         if(Event.type == SDL_QUIT){bIsRunning = false;}
-        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE  ){bIsRunning = false;}// Check if Escape is pressed then quit game
+        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){bIsRunning = false;}// Check if Escape is pressed then quit game
+        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_F1){Overlay.Toggle();}
     }
 
     //Create the array of the current state of the keyboard, 1 is pressed and 0 is not
@@ -167,6 +169,8 @@ void Game::GenerateOutput(){
     Theme::SetDrawColor(Renderer, Theme::Color::BALL);
     DrawCentred(Renderer, Ball, BALL_SIZE, BALL_SIZE); 
     
+    //Draw Overlay
+    Overlay.Draw(Renderer);
     // Render 
     SDL_RenderPresent(Renderer);
 }
