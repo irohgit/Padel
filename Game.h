@@ -30,7 +30,8 @@ private:
     void MovePlayers(float DeltaTime);
     void ProcessInput();
     void ReturnBall(const PaddleState& Paddle, float ContactX);
-    void ServeBall();
+    void ServeBall(float Direction);
+    void ScorePoint(Player& Scorer, float ServeDirection);
     void SpawnPlayers();
     void UpdateGame(float DeltaTime);
 
@@ -47,6 +48,7 @@ private:
     bool bIsRunning = false;
     bool bIsSdlStarted = false;
     Uint64 LastCounter = 0;
+    int Rally = 0;
     SDL_Color CourtColour = Theme::Color::COURT_CLASSIC;
     
 

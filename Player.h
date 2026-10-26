@@ -20,8 +20,13 @@ public:
     const PaddleState& GetPaddle() const { return Paddle;}
     int GetScore() const {return Score;}
 
-    void AddPoint() { ++Score;}
+    void AddPoint();
     void ReleaseController();
+    void ResetScore();
+
+    void AddSet();
+    int GetSets() const;
+    void ResetMatch();
 
     // Player Controls
     void SetMoveDirection(float Direction);
@@ -31,6 +36,7 @@ public:
 private:
     PaddleState Paddle;
     int Score = 0;
+    int Sets = 0;
     SDL_GameController* Controller = nullptr;
     float MoveDirection = 0.0f;
     float PlayerSpeed = 500.0f;

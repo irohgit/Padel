@@ -1,9 +1,11 @@
 #include "Game.h"
 #include "Theme.h" // Pragma once in Theme.h will skip this include. Added here for readability 
 #include "Player.h"
+#include <string>
 #include <random>
 #include <algorithm>
 #include <cmath>
+#include "PixelFont.h"
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -27,7 +29,33 @@ namespace{
     constexpr float BALL_MAX_SPEED_X = 1000.0f;
     constexpr float BALL_MAX_SPEED_Y = 350.0f;
     constexpr float HIT_ZONE = PADDLE_MARGIN + PADDLE_WIDTH / 2.0f + BALL_SIZE + 20.0f;
+    constexpr int POINTS_TO_WIN_SET = 5;
+    constexpr int BEST_OF_SETS = 3;
+    constexpr int SETS_TO_WIN_MATCH = BEST_OF_SETS / 2 + 1;
+    constexpr float SCORE_OFFSET = 160.0f;
+    constexpr float SCORE_Y = 50.0f;
+    constexpr float SCORE_CELL = 10.0f;
+    constexpr float SETS_GAP = 16.0f;
+    constexpr float SET_BOX_SIZE = BALL_SIZE/2.0f;
+    constexpr float SET_BOX_GAP = BALL_SIZE/3.0f;
 
+    void DrawSetBoxes(SDL_Renderer* Renderer, int SetsWon, float CentreX, float Y){
+        const float Total = SETS_TO_WIN_MATCH * SET_BOX_SIZE + (SETS_TO_WIN_MATCH - 1) * SET_BOX_GAP;
+        float X = CentreX - Total/2.0f;
+        for(int i = 0; i < SETS_TO_WIN_MATCH; ++i){
+            const SDL_FRect Box = {X,Y,SET_BOX_SIZE, SET_BOX_SIZE};
+            if (i < SetsWon) {SDL_RenderFillRectF(Renderer, &Box);}
+            else {SDL_RenderDrawRectF(Renderer, &Box); }
+            X += SET_BOX_SIZE + SET_BOX_GAP;
+        }
+    }
+    void DrawPlayerScore(SDL_Renderer* Renderer, const Player& Player, float CentreX){
+        const std::string Points = std::to_string(Player.GetScore());
+        const float BoxesY = SCORE_Y + PixelFont::TextHeight(SCORE_CELL) + SETS_GAP;
+
+        PixelFont::DrawTextCentred(Renderer, Points.c_str(), CentreX, SCORE_Y,SCORE_CELL);
+        DrawSetBoxes(Renderer, Player.GetSets(), CentreX, BoxesY);
+    }
     
     bool OverlapsVertically(float BallY, float PaddleY){
         return std::abs(BallY - PaddleY) <= PADDLE_HEIGHT/2.0f + BALL_SIZE /2.0f;
@@ -92,7 +120,7 @@ bool Game::Initialize(){
         
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
-    ServeBall();
+    ServeBall(CoinFlip() ? 1.0f : -1.0f);
     bIsRunning = true;
 
     // Temporary Helper for upgrade - Delete for production
@@ -123,13 +151,22 @@ void Game::GenerateOutput(){
     Theme::SetDrawColor(Renderer, CourtColour);
     SDL_RenderClear(Renderer);
 
+    // Draw Points and Sets Order The Scoring first so that ball renders over
+    const float Middle = WINDOW_WIDTH/2.0f;
+    Theme::SetDrawColor(Renderer, Theme::Color::TEXT_NORMAL);
+    DrawPlayerScore(Renderer, LeftPlayer, Middle - SCORE_OFFSET);
+    DrawPlayerScore(Renderer, RightPlayer, Middle + SCORE_OFFSET);
+
+    // Draw Paddles
     Theme::SetDrawColor(Renderer, Theme::Color::PADDLE);
     DrawCentred(Renderer, LeftPlayer.GetPaddle(), PADDLE_WIDTH,PADDLE_HEIGHT);
     DrawCentred(Renderer, RightPlayer.GetPaddle(), PADDLE_WIDTH,PADDLE_HEIGHT);
 
+    // Draw Ball
     Theme::SetDrawColor(Renderer, Theme::Color::BALL);
     DrawCentred(Renderer, Ball, BALL_SIZE, BALL_SIZE); 
-
+    
+    // Render 
     SDL_RenderPresent(Renderer);
 }
 
@@ -174,11 +211,10 @@ void Game::MovePlayers(float DeltaTime){
     LeftPlayer.Move(DeltaTime, PADDLE_MIN_Y,PADDLE_MAX_Y);
     RightPlayer.Move(DeltaTime, PADDLE_MIN_Y,PADDLE_MAX_Y);
 }
-void Game::ServeBall(){
+void Game::ServeBall(float Direction){
  // Start ball in the middle of the court and randomize X Direction and Y Velocityat 
- const float DirectionX = CoinFlip() ? 1.0f : -1.0f;
  const float VelocityY = RandomRange(-BALL_SPEED_Y, BALL_SPEED_Y);
- Ball = {WINDOW_WIDTH/2.0f, WINDOW_HEIGHT/2.0f, DirectionX * BALL_SERVE_SPEED_X, VelocityY};  
+ Ball = {WINDOW_WIDTH/2.0f, WINDOW_HEIGHT/2.0f, Direction * BALL_SERVE_SPEED_X, VelocityY};  
 }
 
 void Game::MoveBall(float DeltaTime){
@@ -194,7 +230,29 @@ void Game::MoveBall(float DeltaTime){
 
     //Start checking for collisions only when Ball is in the HitZone
     if(Ball.X < HIT_ZONE || Ball.X > WINDOW_WIDTH - HIT_ZONE){ CheckPaddleHits(PreviousX);}
-    if(Ball.X < 0.0f || Ball.X > WINDOW_WIDTH){ ServeBall();}
+    if(Ball.X < 0.0f){ScorePoint(RightPlayer, -1.0f);}
+    else if(Ball.X > WINDOW_WIDTH){ScorePoint(LeftPlayer, 1.0f);}
+}
+
+//void Game::ScorePoint(Player &Scorer, float ServeDirection)
+void Game::ScorePoint(Player &Scorer, float ServeDirection){
+    const char* Name = (&Scorer == &LeftPlayer) ? "Left" : "Right";
+    
+    Scorer.AddPoint();
+    SDL_Log("Point %s: %d - %d (rally %d)", Name, LeftPlayer.GetScore(),RightPlayer.GetScore(), Rally);
+    Rally = 0;
+
+    if(Scorer.GetScore() >= POINTS_TO_WIN_SET){
+        Scorer.AddSet();
+        LeftPlayer.ResetScore(); RightPlayer.ResetScore();
+        SDL_Log("Set to %s, Sets %d - %d", Name, LeftPlayer.GetSets(), RightPlayer.GetSets());
+        if(Scorer.GetSets() >= SETS_TO_WIN_MATCH){
+            SDL_Log("%s player wins the match", Name);
+            LeftPlayer.ResetMatch();
+            RightPlayer.ResetMatch();
+        }
+    }
+    ServeBall(ServeDirection);
 }
 
 void Game::CheckPaddleHits(float PreviousX){
@@ -221,10 +279,10 @@ void Game::ReturnBall(const PaddleState &Paddle, float ContactX){
     Ball.VelocityX = std::clamp(-Ball.VelocityX * BALL_SPEEDUP,
                                 -BALL_MAX_SPEED_X,
                                 BALL_MAX_SPEED_X);
-    const float Offset = std::clamp((Ball.Y - Paddle.Y) / (PADDLE_HEIGHT /2.0f),
-                                     -1.0f,
-                                     1.0f);
+    const float Offset = std::clamp((Ball.Y - Paddle.Y) / (PADDLE_HEIGHT /2.0f), -1.0f, 1.0f);
     Ball.VelocityY = Offset * BALL_MAX_SPEED_Y;
+
+    ++Rally;
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //

@@ -150,6 +150,7 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
   <ItemGroup>
     <ClInclude Include="Ball.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="PixelFont.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Theme.h" />
   </ItemGroup>
