@@ -4,6 +4,7 @@
 
 #include <SDL/SDL.h>
 #include "Theme.h"
+#include "Player.h"
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
 
@@ -23,11 +24,16 @@ private:
     float ComputeDeltaTime();
     void UpdateGame(float DeltaTime);
     void GenerateOutput();
+    void SpawnPlayers();
+
 
     // PRODUCTION: What the show needs to run
     // What It Has
     SDL_Window* Window = nullptr;
     SDL_Renderer* Renderer = nullptr;
+
+    Player LeftPlayer;
+    Player RightPlayer;
     // What it Knows
     bool bIsRunning = false;
     bool bIsSdlStarted = false;

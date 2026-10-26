@@ -13,10 +13,12 @@ namespace Theme
         constexpr SDL_Color COURT_CLASSIC     = { 110, 188, 102, 255 };   // #6ebc66
         constexpr SDL_Color TEXT_HIGHLIGHT    = { 255, 204,  90, 255 };   // #ffcc5a
         constexpr SDL_Color TEXT_NORMAL       = { 255, 255, 255, 255 };   // #ffffff
+        constexpr SDL_Color PADDLE = { 255, 255, 255, 255 }; // #ffffff
     }
 
     inline void SetDrawColor(SDL_Renderer* Renderer, SDL_Color Colour)
     {
         SDL_SetRenderDrawColor(Renderer, Colour.r, Colour.g, Colour.b, Colour.a);
     }
+
 }

@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Theme.h" // Pragma once in Theme.h will skip this include. Added here for readability 
+#include "Player.h"
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -8,6 +9,20 @@ namespace{
     constexpr float MAX_DELTA = 0.05f;
     constexpr const char *WINDOW_TITLE = "Padel";
     constexpr const int GRAPHICS_DRIVER = -1; // -1 Makes SDL choose the graphics driver for us
+    constexpr float PADDLE_WIDTH = 10.0f;
+    constexpr float PADDLE_HEIGHT = 100.0f;
+    constexpr float PADDLE_MARGIN = 100.0f; // Distance from screen edge
+    
+    void DrawPaddle(SDL_Renderer* Renderer, const PaddleState& P)
+    {
+        // Create Rect
+        SDL_FRect Rect = { P.X - PADDLE_WIDTH /2.0f,
+                           P.Y - PADDLE_HEIGHT/2.0f,
+                           PADDLE_WIDTH,
+                           PADDLE_HEIGHT};//x.y.w.h
+        // Fill Rect
+        SDL_RenderFillRectF(Renderer, &Rect);
+    }
 
     // Templates for Guards
     template <typename T>
@@ -37,6 +52,7 @@ namespace{
     }
     // Debug and Development Helpers
     void checkSDLVersion(){SDL_version Version; SDL_GetVersion(&Version);SDL_Log("SDL: %d.%d.%d", Version.major, Version.minor, Version.patch);}
+
 }
 
 bool Game::Initialize(){
@@ -51,7 +67,8 @@ bool Game::Initialize(){
     if (!NullGuard(Renderer, "SDL_CreateRenderer")) return false;
     if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
         
-    LastCounter = SDL_GetPerformanceCounter() ; 
+    LastCounter = SDL_GetPerformanceCounter(); 
+    SpawnPlayers();
     bIsRunning = true;
 
     // Temporary Helper for upgrade - Delete for production
@@ -72,8 +89,14 @@ void Game::UpdateGame(float DeltaTime){
     (void)DeltaTime;
 }
 void Game::GenerateOutput(){
+    //Ensure blank canvas
     Theme::SetDrawColor(Renderer, CourtColour);
     SDL_RenderClear(Renderer);
+
+    Theme::SetDrawColor(Renderer, Theme::Color::PADDLE);
+    DrawPaddle(Renderer, LeftPlayer.GetPaddle());
+    DrawPaddle(Renderer, RightPlayer.GetPaddle());
+
     SDL_RenderPresent(Renderer);
 }
 
@@ -90,12 +113,15 @@ void Game::RunLoop(){
     }
 }
 void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Game
+    LeftPlayer.ReleaseController();
+    RightPlayer.ReleaseController();
     Release(Renderer, SDL_DestroyRenderer);//1. Renderer: If It exists,destroy the Renderer
     Release(Window, SDL_DestroyWindow);//2. Window: If it exists, destroy the Window
     Release(bIsSdlStarted,SDL_Quit);//3. If started, run SDL_Quit and reset bIsSdlStarted to false
 }
 
 Game::~Game(){ShutDown();} // Safety call. Destructor will ShutDown
+
 
 // HELPER FUNCTIONS
 float Game::ComputeDeltaTime(){
@@ -105,6 +131,11 @@ float Game::ComputeDeltaTime(){
     LastCounter = Now;
     if(DeltaTime > MAX_DELTA){DeltaTime = MAX_DELTA;}
     return DeltaTime;
+}
+
+void Game::SpawnPlayers(){
+    LeftPlayer.SpawnAt(PADDLE_MARGIN,WINDOW_HEIGHT/2.0f);
+    RightPlayer.SpawnAt(WINDOW_WIDTH-PADDLE_MARGIN,WINDOW_HEIGHT/2.0f);
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //
