@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Theme.h" // Pragma once in Theme.h will skip this include. Added here for readability 
 #include "Player.h"
+#include <random>
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -14,18 +15,21 @@ namespace{
     constexpr float PADDLE_MARGIN = 100.0f; // Distance from screen edge
     constexpr float PADDLE_MIN_Y = PADDLE_HEIGHT / 2.0f;
     constexpr float PADDLE_MAX_Y = WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f;
+    constexpr float BALL_SIZE = 20.0f;
+    constexpr float BALL_SPEED_X = 250.0f;
+    constexpr float BALL_SPEED_Y = 250.0f;
+    constexpr float BALL_MIN_Y = BALL_SIZE / 2.0f;
+    constexpr float BALL_MAX_Y = WINDOW_HEIGHT - BALL_SIZE / 2.0f;
     
-    void DrawPaddle(SDL_Renderer* Renderer, const PaddleState& P)
-    {
-        // Create Rect
-        SDL_FRect Rect = { P.X - PADDLE_WIDTH /2.0f,
-                           P.Y - PADDLE_HEIGHT/2.0f,
-                           PADDLE_WIDTH,
-                           PADDLE_HEIGHT};//x.y.w.h
-        // Fill Rect
+    // Template for Drawing On Screen an Object with a root that is centered
+    template <typename T>
+    void DrawCentred(SDL_Renderer* Renderer, const T& Object, float Width, float Height){
+        SDL_FRect Rect = {Object.X - Width/2.0f,
+                          Object.Y - Height/2.0f,
+                          Width,
+                          Height};
         SDL_RenderFillRectF(Renderer, &Rect);
     }
-
     // Templates for Guards
     template <typename T>
     bool NullGuard(const T* Resource, const char* CreatorName) // NullGuard: True if the resource exists. If false, then it will log which SDL call failed.
@@ -52,6 +56,12 @@ namespace{
     {
         if(bStarted){Shutdown(); bStarted = false;}
     }
+
+    // Math Helpers
+    std::mt19937& RandomEngine(){ static std::mt19937 Engine{ std::random_device{}() }; return Engine;}
+    float RandomRange(float Min, float Max){std::uniform_real_distribution<float>Range(Min,Max); return Range(RandomEngine());}
+    bool CoinFlip(){ return std::bernoulli_distribution(0.5)(RandomEngine());}
+
     // Debug and Development Helpers
     void checkSDLVersion(){SDL_version Version; SDL_GetVersion(&Version);SDL_Log("SDL: %d.%d.%d", Version.major, Version.minor, Version.patch);}
 
@@ -71,6 +81,7 @@ bool Game::Initialize(){
         
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
+    ServeBall();
     bIsRunning = true;
 
     // Temporary Helper for upgrade - Delete for production
@@ -94,6 +105,7 @@ void Game::ProcessInput(){
 
 void Game::UpdateGame(float DeltaTime){
     MovePlayers(DeltaTime);
+    MoveBall(DeltaTime);
 }
 void Game::GenerateOutput(){
     //Ensure blank canvas
@@ -101,8 +113,11 @@ void Game::GenerateOutput(){
     SDL_RenderClear(Renderer);
 
     Theme::SetDrawColor(Renderer, Theme::Color::PADDLE);
-    DrawPaddle(Renderer, LeftPlayer.GetPaddle());
-    DrawPaddle(Renderer, RightPlayer.GetPaddle());
+    DrawCentred(Renderer, LeftPlayer.GetPaddle(), PADDLE_WIDTH,PADDLE_HEIGHT);
+    DrawCentred(Renderer, RightPlayer.GetPaddle(), PADDLE_WIDTH,PADDLE_HEIGHT);
+
+    Theme::SetDrawColor(Renderer, Theme::Color::BALL);
+    DrawCentred(Renderer, Ball, BALL_SIZE, BALL_SIZE); 
 
     SDL_RenderPresent(Renderer);
 }
@@ -147,6 +162,24 @@ void Game::SpawnPlayers(){
 void Game::MovePlayers(float DeltaTime){
     LeftPlayer.Move(DeltaTime, PADDLE_MIN_Y,PADDLE_MAX_Y);
     RightPlayer.Move(DeltaTime, PADDLE_MIN_Y,PADDLE_MAX_Y);
+}
+void Game::ServeBall(){
+ // Start ball in the middle of the court and randomize X Direction and Y Velocityat 
+ const float DirectionX = CoinFlip() ? 1.0f : -1.0f;
+ const float VelocityY = RandomRange(-BALL_SPEED_Y, BALL_SPEED_Y);
+ Ball = {WINDOW_WIDTH/2.0f, WINDOW_HEIGHT/2.0f, DirectionX * BALL_SPEED_X, VelocityY};  
+}
+
+void Game::MoveBall(float DeltaTime){
+    //Place updated Velocities into Ball.X and Y
+    Ball.X += Ball.VelocityX * DeltaTime;
+    Ball.Y += Ball.VelocityY * DeltaTime;
+    //When the ball moves beyond the window top and bottom edges, place it back in and then reverse the y direction
+    if(Ball.Y < BALL_MIN_Y){ Ball.Y = BALL_MIN_Y; Ball.VelocityY = -Ball.VelocityY;}
+    else if(Ball.Y > BALL_MAX_Y){ Ball.Y = BALL_MAX_Y; Ball.VelocityY = -Ball.VelocityY;}
+
+    // When ball leaves left or right side of window serve again (temporary)
+    if(Ball.X < 0.0f || Ball.X > WINDOW_WIDTH){ ServeBall();}
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //

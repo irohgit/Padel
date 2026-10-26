@@ -14,6 +14,7 @@ namespace Theme
         constexpr SDL_Color TEXT_HIGHLIGHT    = { 255, 204,  90, 255 };   // #ffcc5a
         constexpr SDL_Color TEXT_NORMAL       = { 255, 255, 255, 255 };   // #ffffff
         constexpr SDL_Color PADDLE = { 255, 255, 255, 255 }; // #ffffff
+        constexpr SDL_Color BALL = {255,204,80,255}; //#ffc5a
     }
 
     inline void SetDrawColor(SDL_Renderer* Renderer, SDL_Color Colour)

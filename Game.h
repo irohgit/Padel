@@ -5,6 +5,7 @@
 #include <SDL/SDL.h>
 #include "Theme.h"
 #include "Player.h"
+#include "Ball.h"
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
 
@@ -21,13 +22,15 @@ public: // FRONT OF HOUSE (public): What the theatre manager (main) may ask for
 
 private:
     // CUE SHEET: Conductor (RunLoop) calls, in order
-    void ProcessInput();
     float ComputeDeltaTime();
-    void UpdateGame(float DeltaTime);
-    void GenerateOutput();
-    void SpawnPlayers();
-    void MovePlayers(float DeltaTime);
 
+    void GenerateOutput();
+    void MoveBall(float DeltaTime);
+    void MovePlayers(float DeltaTime);
+    void ProcessInput();
+    void ServeBall();
+    void SpawnPlayers();
+    void UpdateGame(float DeltaTime);
 
     // PRODUCTION: What the show needs to run
     // What It Has
@@ -36,12 +39,14 @@ private:
 
     Player LeftPlayer;
     Player RightPlayer;
+
+    BallState Ball;
     // What it Knows
     bool bIsRunning = false;
     bool bIsSdlStarted = false;
     Uint64 LastCounter = 0;
     SDL_Color CourtColour = Theme::Color::COURT_CLASSIC;
-
+    
 
 };
 
