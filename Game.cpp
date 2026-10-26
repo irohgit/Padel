@@ -25,7 +25,7 @@ namespace{
     constexpr float BALL_SPEED_Y = 250.0f;
     constexpr float BALL_MIN_Y = BALL_SIZE / 2.0f;
     constexpr float BALL_MAX_Y = WINDOW_HEIGHT - BALL_SIZE / 2.0f;
-    constexpr float BALL_SPEEDUP = 1.05f; // Each return will speed up ball by 5%
+    constexpr float BALL_SPEEDUP = 1.25f; // Each return will speed up ball by 25%
     constexpr float BALL_MAX_SPEED_X = 1000.0f;
     constexpr float BALL_MAX_SPEED_Y = 350.0f;
     constexpr float HIT_ZONE = PADDLE_MARGIN + PADDLE_WIDTH / 2.0f + BALL_SIZE + 20.0f;
@@ -120,6 +120,7 @@ bool Game::Initialize(){
         
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
+    Events.Subscribe(&Logger);
     ServeBall(CoinFlip() ? 1.0f : -1.0f);
     bIsRunning = true;
 
@@ -225,8 +226,12 @@ void Game::MoveBall(float DeltaTime){
     Ball.X += Ball.VelocityX * DeltaTime;
     Ball.Y += Ball.VelocityY * DeltaTime;
     //When the ball moves beyond the window top and bottom edges, place it back in and then reverse the y direction
-    if(Ball.Y < BALL_MIN_Y){ Ball.Y = BALL_MIN_Y; Ball.VelocityY = -Ball.VelocityY;}
-    else if(Ball.Y > BALL_MAX_Y){ Ball.Y = BALL_MAX_Y; Ball.VelocityY = -Ball.VelocityY;}
+    if(Ball.Y < BALL_MIN_Y){ Ball.Y = BALL_MIN_Y; Ball.VelocityY = -Ball.VelocityY;
+        Events.Publish({MatchEventType::WallBounce,CourtSide::None, Ball.X,Ball.Y});
+    }
+    else if(Ball.Y > BALL_MAX_Y){ Ball.Y = BALL_MAX_Y; Ball.VelocityY = -Ball.VelocityY;
+        Events.Publish({MatchEventType::WallBounce,CourtSide::None, Ball.X,Ball.Y});
+    }
 
     //Start checking for collisions only when Ball is in the HitZone
     if(Ball.X < HIT_ZONE || Ball.X > WINDOW_WIDTH - HIT_ZONE){ CheckPaddleHits(PreviousX);}
@@ -240,13 +245,17 @@ void Game::ScorePoint(Player &Scorer, float ServeDirection){
     
     Scorer.AddPoint();
     SDL_Log("Point %s: %d - %d (rally %d)", Name, LeftPlayer.GetScore(),RightPlayer.GetScore(), Rally);
+    const CourtSide ScorerSide =  (&Scorer == &LeftPlayer) ? CourtSide::Left : CourtSide::Right;
+    Events.Publish({MatchEventType::PointScored, ScorerSide, Ball.X,Ball.Y, 0.0f, Rally});
     Rally = 0;
 
     if(Scorer.GetScore() >= POINTS_TO_WIN_SET){
         Scorer.AddSet();
+        Events.Publish({MatchEventType::SetWon, ScorerSide});
         LeftPlayer.ResetScore(); RightPlayer.ResetScore();
         SDL_Log("Set to %s, Sets %d - %d", Name, LeftPlayer.GetSets(), RightPlayer.GetSets());
         if(Scorer.GetSets() >= SETS_TO_WIN_MATCH){
+            Events.Publish({MatchEventType::MatchEnd, ScorerSide});
             SDL_Log("%s player wins the match", Name);
             LeftPlayer.ResetMatch();
             RightPlayer.ResetMatch();
@@ -283,6 +292,10 @@ void Game::ReturnBall(const PaddleState &Paddle, float ContactX){
     Ball.VelocityY = Offset * BALL_MAX_SPEED_Y;
 
     ++Rally;
+
+    const CourtSide Hitter = (Ball.VelocityX > 0.0f) ? CourtSide::Left : CourtSide::Right;
+    const float Power = std::abs(Ball.VelocityX) / BALL_MAX_SPEED_X;
+    Events.Publish({MatchEventType::PaddleHit, Hitter,Ball.X,Ball.Y,Power,Rally});
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //

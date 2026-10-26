@@ -6,6 +6,9 @@
 #include "Theme.h"
 #include "Player.h"
 #include "Ball.h"
+#include "MatchEvents.h"
+#include "LogListener.h"
+
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
 
@@ -44,6 +47,9 @@ private:
     Player RightPlayer;
 
     BallState Ball;
+
+    LogListener Logger;
+    MatchEvents Events;
     // What it Knows
     bool bIsRunning = false;
     bool bIsSdlStarted = false;
