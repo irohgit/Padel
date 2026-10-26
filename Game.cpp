@@ -35,7 +35,8 @@ namespace{
     {
         if(bStarted){Shutdown(); bStarted = false;}
     }
-
+    // Debug and Development Helpers
+    void checkSDLVersion(){SDL_version Version; SDL_GetVersion(&Version);SDL_Log("SDL: %d.%d.%d", Version.major, Version.minor, Version.patch);}
 }
 
 bool Game::Initialize(){
@@ -52,6 +53,10 @@ bool Game::Initialize(){
         
     LastCounter = SDL_GetPerformanceCounter() ; 
     bIsRunning = true;
+
+    // Temporary Helper for upgrade - Delete for production
+    checkSDLVersion();
+
     return true;
 }
 void Game::ProcessInput(){

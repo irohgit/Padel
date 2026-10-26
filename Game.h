@@ -33,6 +33,7 @@ private:
     bool bIsSdlStarted = false;
     Uint64 LastCounter = 0;
     SDL_Color CourtColour = Theme::Color::COURT_CLASSIC;
+
 };
 
 #endif // GAME_H

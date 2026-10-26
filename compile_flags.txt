@@ -3,3 +3,4 @@
 -IExternal/SDL/include
 -IC:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api/core/inc
 -IC:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api/studio/inc
+-D__PRFCHWINTRIN_H
