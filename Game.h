@@ -18,6 +18,7 @@ public: // FRONT OF HOUSE (public): What the theatre manager (main) may ask for
     bool Initialize(); // Needs to return true for main to check 
     void RunLoop();
     void ShutDown();
+
 private:
     // CUE SHEET: Conductor (RunLoop) calls, in order
     void ProcessInput();
@@ -25,6 +26,7 @@ private:
     void UpdateGame(float DeltaTime);
     void GenerateOutput();
     void SpawnPlayers();
+    void MovePlayers(float DeltaTime);
 
 
     // PRODUCTION: What the show needs to run
@@ -39,6 +41,7 @@ private:
     bool bIsSdlStarted = false;
     Uint64 LastCounter = 0;
     SDL_Color CourtColour = Theme::Color::COURT_CLASSIC;
+
 
 };
 

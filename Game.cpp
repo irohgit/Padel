@@ -12,6 +12,8 @@ namespace{
     constexpr float PADDLE_WIDTH = 10.0f;
     constexpr float PADDLE_HEIGHT = 100.0f;
     constexpr float PADDLE_MARGIN = 100.0f; // Distance from screen edge
+    constexpr float PADDLE_MIN_Y = PADDLE_HEIGHT / 2.0f;
+    constexpr float PADDLE_MAX_Y = WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f;
     
     void DrawPaddle(SDL_Renderer* Renderer, const PaddleState& P)
     {
@@ -84,9 +86,14 @@ void Game::ProcessInput(){
         else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE  ){bIsRunning = false;}// Check if Escape is pressed then quit game
     }
 
+    //Create the array of the current state of the keyboard, 1 is pressed and 0 is not
+    const Uint8* Keys = SDL_GetKeyboardState(nullptr);
+    LeftPlayer.SetMoveDirection(static_cast<float>(Keys[SDL_SCANCODE_S] - Keys[SDL_SCANCODE_W]));
+    RightPlayer.SetMoveDirection(static_cast<float>(Keys[SDL_SCANCODE_DOWN] - Keys[SDL_SCANCODE_UP]));
 }
+
 void Game::UpdateGame(float DeltaTime){
-    (void)DeltaTime;
+    MovePlayers(DeltaTime);
 }
 void Game::GenerateOutput(){
     //Ensure blank canvas
@@ -137,6 +144,10 @@ void Game::SpawnPlayers(){
     LeftPlayer.SpawnAt(PADDLE_MARGIN,WINDOW_HEIGHT/2.0f);
     RightPlayer.SpawnAt(WINDOW_WIDTH-PADDLE_MARGIN,WINDOW_HEIGHT/2.0f);
 }
+void Game::MovePlayers(float DeltaTime){
+    LeftPlayer.Move(DeltaTime, PADDLE_MIN_Y,PADDLE_MAX_Y);
+    RightPlayer.Move(DeltaTime, PADDLE_MIN_Y,PADDLE_MAX_Y);
+}
 // SOUNDCHECK: Destructor, Initialize and Construction
 //
 // 1 Game Destructor //
@@ -153,6 +164,7 @@ void Game::SpawnPlayers(){
    extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
    extern DECLSPEC int SDLCALL SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h);
    extern DECLSPEC Uint64 SDLCALL SDL_GetPerformanceCounter(void);
+   extern DECLSPEC const Uint8 *SDLCALL SDL_GetKeyboardState(int *numkeys);
    Use flags ACCELERATED to draw on GPU, use PresentVSYNC so that SDL_RendererPresent will wait for monitor refresh to avoid screen tearing
 */ 
 

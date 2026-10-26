@@ -23,9 +23,17 @@ public:
     void AddPoint() { ++Score;}
     void ReleaseController();
 
+    // Player Controls
+    void SetMoveDirection(float Direction);
+    void Move(float DeltaTime, float MinY, float MaxY);
+
+
 private:
     PaddleState Paddle;
     int Score = 0;
     SDL_GameController* Controller = nullptr;
+    float MoveDirection = 0.0f;
+    float PlayerSpeed = 500.0f;
+
 };
 
