@@ -34,6 +34,7 @@ private:
     void AssignController(int DeviceIndex);
     void CheckPaddleHits(float PreviousX);
     void CheckAudioEvents();
+    void CloseLevels(PointOutcome Outcome, CourtSide Winner);
     void GenerateOutput();
     void MoveBall(float DeltaTime);
     void MovePlayers(float DeltaTime);

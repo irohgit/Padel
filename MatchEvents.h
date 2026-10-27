@@ -13,7 +13,20 @@ enum class CourtSide{
     Left,
     Right
 };
-
+enum class PointOutcome{
+    Point,
+    Game,
+    Set,
+    Match
+};
+static_assert(PointOutcome::Point < PointOutcome::Game &&
+              PointOutcome::Game < PointOutcome::Set &&
+              PointOutcome::Set  < PointOutcome::Match,
+              "PointOutcome must stay ordered from smallest to biggest. Point,Game,Set,Match. ScorePoint relies on >= comparison");
+static_assert(static_cast<int>(PointOutcome::Game)  == static_cast<int>(PointOutcome::Point) + 1 &&
+              static_cast<int>(PointOutcome::Set)   == static_cast<int>(PointOutcome::Game)  + 1 &&
+              static_cast<int>(PointOutcome::Match) == static_cast<int>(PointOutcome::Set)   + 1,
+              "PointOutcome values must be consecutive. CloseLevels loops through them");
 struct MatchEvent{
     MatchEventType Type;
     CourtSide Side = CourtSide::None;
@@ -21,6 +34,10 @@ struct MatchEvent{
     float Y = 0.0f;
     float Power = 0.0f;
     int Rally = 0;
+
+    PointOutcome Outcome = PointOutcome::Point;
+    int LeftPoints = 0;
+    int RightPoints = 0;
 };
 
 class IMatchListener{

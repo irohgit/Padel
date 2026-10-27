@@ -23,15 +23,15 @@ namespace{
     constexpr float PADDLE_MAX_Y = WINDOW_HEIGHT - PADDLE_HEIGHT/2.0f;
     constexpr float BALL_SIZE = 50.0f;
     constexpr float BALL_SERVE_SPEED_X = 250.0f;
-    constexpr float BALL_SPEED_X = 450.0f;
-    constexpr float BALL_SPEED_Y = 250.0f;
+    constexpr float BALL_SPEED_X = 650.0f;
+    constexpr float BALL_SPEED_Y = 450.0f;
     constexpr float BALL_MIN_Y = BALL_SIZE / 2.0f;
     constexpr float BALL_MAX_Y = WINDOW_HEIGHT - BALL_SIZE / 2.0f;
     constexpr float BALL_SPEEDUP = 1.25f; // Each return will speed up ball by 25%
     constexpr float BALL_MAX_SPEED_X = 1000.0f;
     constexpr float BALL_MAX_SPEED_Y = 350.0f;
     constexpr float HIT_ZONE = PADDLE_MARGIN + PADDLE_WIDTH / 2.0f + BALL_SIZE + 20.0f;
-    constexpr int POINTS_TO_WIN_SET = 5;
+    constexpr int GAMES_TO_WIN_SET = 2;
     constexpr int BEST_OF_SETS = 3;
     constexpr int SETS_TO_WIN_MATCH = BEST_OF_SETS / 2 + 1;
     constexpr float SCORE_OFFSET = 160.0f;
@@ -41,24 +41,6 @@ namespace{
     constexpr float SET_BOX_SIZE = BALL_SIZE/2.0f;
     constexpr float SET_BOX_GAP = BALL_SIZE/3.0f;
 
-    void DrawSetBoxes(SDL_Renderer* Renderer, int SetsWon, float CentreX, float Y){
-        const float Total = SETS_TO_WIN_MATCH * SET_BOX_SIZE + (SETS_TO_WIN_MATCH - 1) * SET_BOX_GAP;
-        float X = CentreX - Total/2.0f;
-        for(int i = 0; i < SETS_TO_WIN_MATCH; ++i){
-            const SDL_FRect Box = {X,Y,SET_BOX_SIZE, SET_BOX_SIZE};
-            if (i < SetsWon) {SDL_RenderFillRectF(Renderer, &Box);}
-            else {SDL_RenderDrawRectF(Renderer, &Box); }
-            X += SET_BOX_SIZE + SET_BOX_GAP;
-        }
-    }
-    void DrawPlayerScore(SDL_Renderer* Renderer, const Player& Player, float CentreX){
-        const std::string Points = std::to_string(Player.GetScore());
-        const float BoxesY = SCORE_Y + PixelFont::TextHeight(SCORE_CELL) + SETS_GAP;
-
-        PixelFont::DrawTextCentred(Renderer, Points.c_str(), CentreX, SCORE_Y,SCORE_CELL);
-        DrawSetBoxes(Renderer, Player.GetSets(), CentreX, BoxesY);
-    }
-    
     bool OverlapsVertically(float BallY, float PaddleY){
         return std::abs(BallY - PaddleY) <= PADDLE_HEIGHT/2.0f + BALL_SIZE /2.0f;
     }
@@ -69,6 +51,43 @@ namespace{
         return "RIGHT";
     }
 
+    // Win by 2
+    bool WonGame(int ScorerPoints, int OpponentPoints){
+        return ScorerPoints >= 4 && ScorerPoints - OpponentPoints >= 2;
+    }
+    const char *OutcomeName(PointOutcome Outcome){
+        switch(Outcome){
+            case PointOutcome::Point : return "Point";
+            case PointOutcome::Game : return "Game";
+            case PointOutcome::Set : return "Set";
+            case PointOutcome::Match : return "Match";
+        }
+        return "?";
+    }
+    const char* PointLabel(int MyPoints, int OpponentPoints){
+        if(MyPoints >= 3 && OpponentPoints >= 3){
+            return (MyPoints > OpponentPoints) ? "AD" : "40";
+        }
+        static constexpr const char* LABELS[] = {"00", "15", "30","40"};
+        return LABELS[std::clamp(MyPoints,0,3)];
+    }
+    void DrawSetBoxes(SDL_Renderer* Renderer, int SetsWon, float CentreX, float Y){
+        const float Total = SETS_TO_WIN_MATCH * SET_BOX_SIZE + (SETS_TO_WIN_MATCH - 1) * SET_BOX_GAP;
+        float X = CentreX - Total/2.0f;
+        for(int i = 0; i < SETS_TO_WIN_MATCH; ++i){
+            const SDL_FRect Box = {X,Y,SET_BOX_SIZE, SET_BOX_SIZE};
+            if (i < SetsWon) {SDL_RenderFillRectF(Renderer, &Box);}
+            else {SDL_RenderDrawRectF(Renderer, &Box); }
+            X += SET_BOX_SIZE + SET_BOX_GAP;
+        }
+    }
+    void DrawPlayerScore(SDL_Renderer* Renderer, const Player& Me, const Player& Opponent, float CentreX){
+        const std::string Score = std::to_string(Me.GetGames()) + "." + PointLabel(Me.GetScore(), Opponent.GetScore());
+        const float BoxesY = SCORE_Y + PixelFont::TextHeight(SCORE_CELL) + SETS_GAP;
+
+        PixelFont::DrawTextCentred(Renderer, Score.c_str(), CentreX, SCORE_Y, SCORE_CELL);
+        DrawSetBoxes(Renderer, Me.GetSets(), CentreX, BoxesY);
+    }
 
     // Template for Drawing On Screen an Object with a root that is centered
     template <typename T>
@@ -94,7 +113,7 @@ namespace{
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,"%s failed: %s", CallName, SDL_GetError());
         return false;
     }
-    
+     
     // Templates for packdown
     template <typename T, typename ReleaseFunction>
     void Release(T*& Resource, ReleaseFunction Destroy)
@@ -185,8 +204,8 @@ void Game::GenerateOutput(){
     // Draw Points and Sets Order The Scoring first so that ball renders over
     const float Middle = WINDOW_WIDTH/2.0f;
     Theme::SetDrawColor(Renderer, Theme::Color::TEXT_NORMAL);
-    DrawPlayerScore(Renderer, LeftPlayer, Middle - SCORE_OFFSET);
-    DrawPlayerScore(Renderer, RightPlayer, Middle + SCORE_OFFSET);
+    DrawPlayerScore(Renderer, LeftPlayer, RightPlayer, Middle - SCORE_OFFSET);
+    DrawPlayerScore(Renderer, RightPlayer, LeftPlayer, Middle + SCORE_OFFSET);
 
     // Draw Paddles
     Theme::SetDrawColor(Renderer, Theme::Color::PADDLE);
@@ -228,6 +247,30 @@ Game::~Game(){ShutDown();} // Safety call. Destructor will ShutDown
 
 
 // HELPER FUNCTIONS
+
+void Game::CloseLevels(PointOutcome Outcome, CourtSide Winner)
+{
+    for (int Level = static_cast<int>(PointOutcome::Game); 
+         Level <= static_cast<int>(Outcome); 
+         ++Level)
+    {
+        switch (static_cast<PointOutcome>(Level)){
+            case PointOutcome::Game:
+                LeftPlayer.ResetScore(); RightPlayer.ResetScore();
+                break;
+            case PointOutcome::Set:
+                LeftPlayer.ResetGames(); RightPlayer.ResetGames();
+                Events.Publish({MatchEventType::SetWon, Winner});
+                break;
+            case PointOutcome::Match:
+                Events.Publish({MatchEventType::MatchEnd, Winner});
+                LeftPlayer.ResetMatch() ; RightPlayer.ResetMatch();
+                break;
+            case PointOutcome::Point:
+                break;
+        }
+    }
+}
 float Game::ComputeDeltaTime(){
     const Uint64 Now = SDL_GetPerformanceCounter();
     float DeltaTime = static_cast<float>(Now-LastCounter)
@@ -277,28 +320,39 @@ void Game::MoveBall(float DeltaTime){
     else if(Ball.X > WINDOW_WIDTH){ScorePoint(LeftPlayer, 1.0f);}
 }
 
-//void Game::ScorePoint(Player &Scorer, float ServeDirection)
 void Game::ScorePoint(Player &Scorer, float ServeDirection){
-    const char* Name = (&Scorer == &LeftPlayer) ? "Left" : "Right";
-    
-    Scorer.AddPoint();
-    SDL_Log("Point %s: %d - %d (rally %d)", Name, LeftPlayer.GetScore(),RightPlayer.GetScore(), Rally);
-    const CourtSide ScorerSide =  (&Scorer == &LeftPlayer) ? CourtSide::Left : CourtSide::Right;
-    Events.Publish({MatchEventType::PointScored, ScorerSide, Ball.X,Ball.Y, 0.0f, Rally});
-    Rally = 0;
+    Player& Opponent = (&Scorer == &LeftPlayer) ? RightPlayer : LeftPlayer;
+    const CourtSide ScorerSide = (&Scorer == &LeftPlayer) ? CourtSide::Left : CourtSide::Right;
 
-    if(Scorer.GetScore() >= POINTS_TO_WIN_SET){
-        Scorer.AddSet();
-        Events.Publish({MatchEventType::SetWon, ScorerSide});
-        LeftPlayer.ResetScore(); RightPlayer.ResetScore();
-        SDL_Log("Set to %s, Sets %d - %d", Name, LeftPlayer.GetSets(), RightPlayer.GetSets());
-        if(Scorer.GetSets() >= SETS_TO_WIN_MATCH){
-            Events.Publish({MatchEventType::MatchEnd, ScorerSide});
-            SDL_Log("%s player wins the match", Name);
-            LeftPlayer.ResetMatch();
-            RightPlayer.ResetMatch();
+    // 1. Score point then work out what the point does to game,set and match
+    Scorer.AddPoint();
+    PointOutcome Outcome = PointOutcome::Point;
+    if(WonGame(Scorer.GetScore(), Opponent.GetScore())){
+        Outcome = PointOutcome::Game;
+        Scorer.AddGame();
+        if(Scorer.GetGames() >= GAMES_TO_WIN_SET){
+            Outcome = PointOutcome::Set;
+            Scorer.AddSet();
+            if(Scorer.GetSets() >= SETS_TO_WIN_MATCH){Outcome = PointOutcome::Match;}
         }
     }
+
+    // Job 2. Assign Data to Scores
+    MatchEvent Scored{MatchEventType::PointScored, ScorerSide, Ball.X,Ball.Y,0.0f, Rally};
+    Scored.Outcome = Outcome;
+    Scored.LeftPoints = LeftPlayer.GetScore();
+    Scored.RightPoints = RightPlayer.GetScore();
+    Events.Publish(Scored);
+    SDL_Log("%s scores | points %d-%d | games %d-%d | sets %d-%d | %s",
+            ScorerSide == CourtSide::Left ? "Left" : "Right",
+            LeftPlayer.GetScore(), RightPlayer.GetScore(),
+            LeftPlayer.GetGames(), RightPlayer.GetGames(),
+            LeftPlayer.GetSets(),  RightPlayer.GetSets(),
+            OutcomeName(Outcome));   
+    // Job 3. Close
+    CloseLevels(Outcome, ScorerSide);
+   
+    Rally = 0;
     ServeBall(ServeDirection);
 }
 

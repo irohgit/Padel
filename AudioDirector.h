@@ -14,6 +14,8 @@ public:
     
 private:
     void PlayImpact(const char* EventPath, float Power, float X);
+    void CallScore(const MatchEvent& Event);
+    void PlaySideCall(const char* EventPath, CourtSide Side);
     AudioSystem& Audio;
     float CourtWidth;
     const char* LastWeight = "None";

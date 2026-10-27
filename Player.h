@@ -26,7 +26,10 @@ public:
 
     void AddSet();
     int GetSets() const;
+    void AddGame();
+    int GetGames() const;
     void ResetMatch();
+    void ResetGames();
 
     // Player Controls
     void SetMoveDirection(float Direction);
@@ -40,6 +43,7 @@ public:
 
 private:
     PaddleState Paddle;
+    int Games = 0;
     int Score = 0;
     int Sets = 0;
     SDL_GameController* Controller = nullptr;
