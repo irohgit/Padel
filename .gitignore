@@ -4,3 +4,5 @@ Release/
 *.user
 *.pdb
 Ignore_Files/
+PadelAudio/.cache/
+PadelAudio/.user/
