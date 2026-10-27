@@ -117,7 +117,7 @@ bool Game::Initialize(){
     Renderer = SDL_CreateRenderer(Window,GRAPHICS_DRIVER,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     if (!NullGuard(Renderer, "SDL_CreateRenderer")) return false;
     if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
-        
+    if (!Audio.Initialize()){return false;} // AudioSystem logs the FMOD error itself no need for SDL log        
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
     Events.Subscribe(&Logger);
@@ -148,6 +148,7 @@ void Game::ProcessInput(){
 void Game::UpdateGame(float DeltaTime){
     MovePlayers(DeltaTime);
     MoveBall(DeltaTime);
+    Audio.Update(DeltaTime);
 }
 void Game::GenerateOutput(){
     //Ensure blank canvas
@@ -190,6 +191,7 @@ void Game::RunLoop(){
 void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Game
     LeftPlayer.ReleaseController();
     RightPlayer.ReleaseController();
+    Audio.ShutDown();
     Release(Renderer, SDL_DestroyRenderer);//1. Renderer: If It exists,destroy the Renderer
     Release(Window, SDL_DestroyWindow);//2. Window: If it exists, destroy the Window
     Release(bIsSdlStarted,SDL_Quit);//3. If started, run SDL_Quit and reset bIsSdlStarted to false

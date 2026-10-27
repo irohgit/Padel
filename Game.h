@@ -9,6 +9,7 @@
 #include "MatchEvents.h"
 #include "LogListener.h"
 #include "DebugOverlay.h"
+#include "AudioSystem.h"
 
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
@@ -41,6 +42,7 @@ private:
 
     // PRODUCTION: What the show needs to run
     // What It Has
+    AudioSystem Audio;
     SDL_Window* Window = nullptr;
     SDL_Renderer* Renderer = nullptr;
 
