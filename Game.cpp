@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <optional>
 #include "PixelFont.h"
 #include "AudioPaths.h"
 
@@ -134,6 +135,28 @@ namespace{
     // Debug and Development Helpers
     void checkSDLVersion(){SDL_version Version; SDL_GetVersion(&Version);SDL_Log("SDL: %d.%d.%d", Version.major, Version.minor, Version.patch);}
 
+    // Raw input → menu action. Screens never see keys or buttons, only actions.
+    std::optional<MenuAction> ToMenuAction(const SDL_Event& Event){
+        if (Event.type == SDL_KEYDOWN){
+            switch (Event.key.keysym.scancode){
+                case SDL_SCANCODE_UP:     case SDL_SCANCODE_W:     return MenuAction::Up;
+                case SDL_SCANCODE_DOWN:   case SDL_SCANCODE_S:     return MenuAction::Down;
+                case SDL_SCANCODE_RETURN: case SDL_SCANCODE_SPACE: return MenuAction::Accept;
+                case SDL_SCANCODE_BACKSPACE:                       return MenuAction::Cancel;
+                default: break;
+            }
+        }
+        if (Event.type == SDL_CONTROLLERBUTTONDOWN){
+            switch (Event.cbutton.button){
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:   return MenuAction::Up;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN: return MenuAction::Down;
+                case SDL_CONTROLLER_BUTTON_A:         return MenuAction::Accept;
+                case SDL_CONTROLLER_BUTTON_B:         return MenuAction::Cancel;
+                default: break;
+            }
+        }
+        return std::nullopt;   // not a menu input
+    }
 }
 
 bool Game::Initialize(){
@@ -148,6 +171,8 @@ bool Game::Initialize(){
     Renderer = SDL_CreateRenderer(Window,GRAPHICS_DRIVER,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     if (!NullGuard(Renderer, "SDL_CreateRenderer")) return false;
     if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
+    // Load Title Screen
+    if (!Title.Load(Renderer)) return false;
     // Initialize Audio and Load Master Banks
     if (!Audio.Initialize()){return false;} // AudioSystem logs the FMOD error itself no need for SDL log        
     Audio.LoadBank(AudioPaths::MASTER_STRINGS_BANK);
@@ -169,14 +194,20 @@ bool Game::Initialize(){
     return true;
 }
 void Game::ProcessInput(){
-    // 1. Events
+    // 1. Events: global and system first, then the screen gets what's left (my _unhandled_input rule)
     SDL_Event Event;
     while (SDL_PollEvent(&Event)){
         if(Event.type == SDL_QUIT){bIsRunning = false;}
         else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){bIsRunning = false;}
+        else if(Event.type == SDL_KEYDOWN && State == GameState::Title){ Title.Skip(); }
         else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_F1){Overlay.Toggle();}
         else if(Event.type == SDL_CONTROLLERDEVICEADDED) {AssignController(Event.cdevice.which);}
         else if(Event.type == SDL_CONTROLLERDEVICEREMOVED){RemoveController(Event.cdevice.which);}
+        else if(State == GameState::Menu){
+            if (const auto Action = ToMenuAction(Event)){             // only if it IS a menu action
+                if (Menu.HandleAction(*Action)) { ChooseMenuItem(); } // Accept: Game decides what it means
+            }
+        }
     }
 
     //Create the array of the current state of the keyboard, 1 is pressed and 0 is not
@@ -191,12 +222,36 @@ void Game::ProcessInput(){
 }
 
 void Game::UpdateGame(float DeltaTime){
+    if(State == GameState::Title){
+        Title.Update(DeltaTime);
+        if(Title.ConsumeStingCue()){Audio.PlayEvent(AudioPaths::TITLE_STING_EVENT);}
+        if(Title.IsFinished()){
+            State = GameState::Menu;
+            Menu.OnOpen();
+            if(!MenuMusic.IsValid()){MenuMusic = Audio.PlayEvent(AudioPaths::MENU_MUSIC_EVENT);}
+        }
+        Audio.Update(DeltaTime);
+        return;
+    }
+    //Freeze Gamestate until player selects a menu option
+    if(State == GameState::Menu){
+        Title.Update(DeltaTime);
+        Audio.Update(DeltaTime);
+        return;
+    }
     MovePlayers(DeltaTime);
     MoveBall(DeltaTime);
     UpdateOverlayStatus();
+    Director.Update();
     Audio.Update(DeltaTime);
 }
 void Game::GenerateOutput(){
+    if (State == GameState::Title || State == GameState::Menu){
+        Title.Draw(Renderer);
+        if(State == GameState::Menu) {Menu.Draw(Renderer);}
+        SDL_RenderPresent(Renderer);
+        return;
+    }
     //Ensure blank canvas
     Theme::SetDrawColor(Renderer, CourtColour);
     SDL_RenderClear(Renderer);
@@ -237,6 +292,7 @@ void Game::RunLoop(){
 void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Game
     LeftPlayer.ReleaseController();
     RightPlayer.ReleaseController();
+    Title.Release();
     Audio.ShutDown();
     Release(Renderer, SDL_DestroyRenderer);//1. Renderer: If It exists,destroy the Renderer
     Release(Window, SDL_DestroyWindow);//2. Window: If it exists, destroy the Window
@@ -436,6 +492,26 @@ void Game::RemoveController(SDL_JoystickID InstanceID)
 {
     if(LeftPlayer.GetControllerID() == InstanceID){LeftPlayer.ReleaseController();}
     if(RightPlayer.GetControllerID() == InstanceID){RightPlayer.ReleaseController();}
+}
+
+// What each menu item does. The menu only reports the choice; Game owns the consequences.
+void Game::ChooseMenuItem(){
+    switch (Menu.GetSelected()){
+        case MainMenu::Item::StartGame: StartMatch(); break;
+        case MainMenu::Item::Settings:  break;                    // not built yet
+        case MainMenu::Item::Exit:      bIsRunning = false; break;
+    }
+}
+
+// A fresh match: clean scores, paddles home, new serve
+void Game::StartMatch(){
+    MenuMusic.Stop(true);
+    LeftPlayer.ResetMatch();
+    RightPlayer.ResetMatch();
+    SpawnPlayers();
+    Rally = 0;
+    ServeBall(CoinFlip() ? 1.0f : -1.0f);
+    State = GameState::Playing;
 }
 
 // SOUNDCHECK: Destructor, Initialize and Construction

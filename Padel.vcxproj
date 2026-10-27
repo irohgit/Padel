@@ -149,9 +149,11 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="LogListener.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="MatchEvents.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="SoundEvent.cpp" />
+    <ClCompile Include="TitleSequence.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioDirector.h" />
@@ -161,11 +163,14 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     <ClInclude Include="DebugOverlay.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="LogListener.h" />
+    <ClInclude Include="MainMenu.h" />
     <ClInclude Include="MatchEvents.h" />
+    <ClInclude Include="MenuScreen.h" />
     <ClInclude Include="PixelFont.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="SoundEvent.h" />
     <ClInclude Include="Theme.h" />
+    <ClInclude Include="TitleSequence.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

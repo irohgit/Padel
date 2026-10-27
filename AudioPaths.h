@@ -1,5 +1,6 @@
 #pragma once
 
+
 // Source of Truth for names that Padel uses to communicate with FMOD.
 // Requirement: Names must match FMOD Studio exactly.
 // Check: Game::Initialize checks these
@@ -13,7 +14,12 @@ namespace AudioPaths{
     // Events SFX
     inline constexpr const char* HIT_EVENT = "event:/SFX/Hit";
     inline constexpr const char* WALL_EVENT = "event:/SFX/Wall";
-
+    // Events MUSIC
+    inline constexpr const char* MENU_MUSIC_EVENT = "event:/Music/Menu";
+    inline constexpr const char* MATCH_MUSIC_EVENT = "event:/Music/Theme";
+    // Events Stingers
+    inline constexpr const char* TITLE_STING_EVENT           = "event:/Stinger/TitleLogo";
+    inline constexpr const char* WIN_STING_EVENT             = "event:/Stinger/Win";
     // Events: umpire VO
     inline constexpr const char* UMPIRE_SCORE_EVENT          = "event:/VO/Umpire/Score";
     inline constexpr const char* UMPIRE_ADVANTAGE_EVENT      = "event:/VO/Umpire/Advantage";
@@ -46,6 +52,10 @@ namespace AudioPaths{
     UMPIRE_GAME_SET_MATCH_EVENT,
     UMPIRE_SCORE_EVENT,
     WALL_EVENT,
+    TITLE_STING_EVENT,
+    MENU_MUSIC_EVENT,
+    MATCH_MUSIC_EVENT,
+    WIN_STING_EVENT
     //TODO:
     };
 }

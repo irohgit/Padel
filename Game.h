@@ -11,7 +11,8 @@
 #include "DebugOverlay.h"
 #include "AudioSystem.h"
 #include "AudioDirector.h"
-
+#include "TitleSequence.h"
+#include "MainMenu.h"
 
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
@@ -28,12 +29,14 @@ public: // FRONT OF HOUSE (public): What the theatre manager (main) may ask for
     void ShutDown();
 
 private:
+    enum class GameState{Title,Menu,Playing};
     // CUE SHEET: Conductor (RunLoop) calls, in order
     float ComputeDeltaTime();
 
     void AssignController(int DeviceIndex);
     void CheckPaddleHits(float PreviousX);
     void CheckAudioEvents();
+    void ChooseMenuItem();
     void CloseLevels(PointOutcome Outcome, CourtSide Winner);
     void GenerateOutput();
     void MoveBall(float DeltaTime);
@@ -44,6 +47,7 @@ private:
     void ServeBall(float Direction);
     void ScorePoint(Player& Scorer, float ServeDirection);
     void SpawnPlayers();
+    void StartMatch();
     void UpdateGame(float DeltaTime);
     void UpdateOverlayStatus();
 
@@ -51,8 +55,13 @@ private:
     // What It Has
     AudioSystem Audio;
     AudioDirector Director{Audio,1920.0f}; //C++ Builds members top to bottom and destroys them bottom to top.
+    SoundEvent MenuMusic;
     SDL_Window* Window = nullptr;
     SDL_Renderer* Renderer = nullptr;
+    TitleSequence Title;
+    MainMenu Menu;
+    GameState State = GameState::Title;
+
 
     Player LeftPlayer;
     Player RightPlayer;
@@ -69,7 +78,6 @@ private:
     Uint64 LastCounter = 0;
     int Rally = 0;
     SDL_Color CourtColour = Theme::Color::COURT_CLASSIC;
-    
 
 };
 

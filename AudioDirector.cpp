@@ -60,6 +60,9 @@ void AudioDirector::OnMatchEvent(const MatchEvent& Event)
         case MatchEventType::PaddleHit : LastSound = "HIT" ; PlayImpact(AudioPaths::HIT_EVENT, Event.Power, Event.X); break;
         case MatchEventType::WallBounce: LastSound = "WALL"; PlayImpact(AudioPaths::WALL_EVENT, Event.Power, Event.X); break;
         case MatchEventType::PointScored : CallScore(Event) ; break;
+        case MatchEventType::MatchEnd :
+             MatchMusic.Stop(true);
+             WinStinger = Audio.PlayEvent(AudioPaths::WIN_STING_EVENT);
         default : break;                                   
     }
 }
@@ -117,4 +120,8 @@ void AudioDirector::PlaySideCall(const char *EventPath, CourtSide Side){
     Call.SetParameter(AudioPaths::SIDE_PARAM, static_cast<float>(ToSide(Side)));
     Call.Start();
 }
-
+void AudioDirector::Update(){
+    if(!MatchMusic.IsValid() && !WinStinger.IsValid()){
+        MatchMusic = Audio.PlayEvent(AudioPaths::MATCH_MUSIC_EVENT);
+    }
+}

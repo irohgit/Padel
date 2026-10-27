@@ -4,10 +4,11 @@
 
 // THEME: Padel's design  
 namespace Theme
-{
+{   
+    inline constexpr float SCREEN_MARGIN = 110.0f;
     namespace Color
     {
-        constexpr SDL_Color MENU_BACKGROUND   = {  82,  31,  35, 255 };   // #521f23
+        constexpr SDL_Color MENU_BACKGROUND   = { 0x52, 0x1f, 0x23,255};   // #521f23
         constexpr SDL_Color SELECT_BACKGROUND = {  29,  48,  38, 255 };   // #1d3026
         constexpr SDL_Color COURT_SUPER       = {  53, 115, 188, 255 };   // #3573bc
         constexpr SDL_Color COURT_CLASSIC     = { 110, 188, 102, 255 };   // #6ebc66

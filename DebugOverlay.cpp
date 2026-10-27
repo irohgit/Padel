@@ -6,7 +6,7 @@
 namespace {
     constexpr float PANEL_X     = 10.0f;
     constexpr float PANEL_Y     = 10.0f;
-    constexpr float PANEL_WIDTH = 300.0f;
+    constexpr float PANEL_WIDTH = 400.0f;
     constexpr float PADDING     = 6.0f;
     constexpr float CELL        = 2.0f;    
     constexpr float LINE_HEIGHT = 20.0f;
