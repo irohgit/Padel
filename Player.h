@@ -31,7 +31,12 @@ public:
     // Player Controls
     void SetMoveDirection(float Direction);
     void Move(float DeltaTime, float MinY, float MaxY);
-
+    
+    // Player Input
+    void AssignController(SDL_GameController* Pad);
+    bool HasController() const {return Controller != nullptr;}
+    SDL_JoystickID GetControllerID() const;
+    float ReadPadY() const;
 
 private:
     PaddleState Paddle;

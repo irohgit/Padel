@@ -31,11 +31,14 @@ private:
     // CUE SHEET: Conductor (RunLoop) calls, in order
     float ComputeDeltaTime();
 
+    void AssignController(int DeviceIndex);
     void CheckPaddleHits(float PreviousX);
+    void CheckAudioEvents();
     void GenerateOutput();
     void MoveBall(float DeltaTime);
     void MovePlayers(float DeltaTime);
     void ProcessInput();
+    void RemoveController(SDL_JoystickID InstanceID);
     void ReturnBall(const PaddleState& Paddle, float ContactX);
     void ServeBall(float Direction);
     void ScorePoint(Player& Scorer, float ServeDirection);

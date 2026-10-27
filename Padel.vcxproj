@@ -155,6 +155,7 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioDirector.h" />
+    <ClInclude Include="AudioPaths.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="Ball.h" />
     <ClInclude Include="DebugOverlay.h" />

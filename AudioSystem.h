@@ -48,6 +48,7 @@ public:
 
     SoundEvent PlayEvent(const std::string& name);
     SoundEvent CreateEvent(const std::string& name);
+    bool HasEvent(const std::string& name) const;
 
     void Update(float deltaTime);
     

@@ -77,5 +77,8 @@
     <ClInclude Include="AudioDirector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AudioPaths.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

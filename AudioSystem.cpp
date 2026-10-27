@@ -330,6 +330,10 @@ FMOD::Studio::EventInstance* AudioSystem::GetEventInstance(unsigned int id)
 	return event;
 }
 
+bool AudioSystem::HasEvent(const std::string &name) const{
+    return mEvents.find(name) != mEvents.end();
+}
+
 /*
    namespace
    {

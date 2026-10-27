@@ -5,7 +5,9 @@
 #include <random>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include "PixelFont.h"
+#include "AudioPaths.h"
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -66,6 +68,8 @@ namespace{
         if (Pan <  0.33f) return "CENTRE";
         return "RIGHT";
     }
+
+
     // Template for Drawing On Screen an Object with a root that is centered
     template <typename T>
     void DrawCentred(SDL_Renderer* Renderer, const T& Object, float Width, float Height){
@@ -127,8 +131,10 @@ bool Game::Initialize(){
     if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
     // Initialize Audio and Load Master Banks
     if (!Audio.Initialize()){return false;} // AudioSystem logs the FMOD error itself no need for SDL log        
-    Audio.LoadBank("Assets/Desktop/Master.strings.bank");
-    Audio.LoadBank("Assets/Desktop/Master.bank");
+    Audio.LoadBank(AudioPaths::MASTER_STRINGS_BANK);
+    Audio.LoadBank(AudioPaths::MASTER_BANK);
+    CheckAudioEvents();
+
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
     // Event Subscription
@@ -148,14 +154,21 @@ void Game::ProcessInput(){
     SDL_Event Event;
     while (SDL_PollEvent(&Event)){
         if(Event.type == SDL_QUIT){bIsRunning = false;}
-        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){bIsRunning = false;}// Check if Escape is pressed then quit game
+        else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){bIsRunning = false;}
         else if(Event.type == SDL_KEYDOWN && Event.key.keysym.scancode == SDL_SCANCODE_F1){Overlay.Toggle();}
+        else if(Event.type == SDL_CONTROLLERDEVICEADDED) {AssignController(Event.cdevice.which);}
+        else if(Event.type == SDL_CONTROLLERDEVICEREMOVED){RemoveController(Event.cdevice.which);}
     }
 
     //Create the array of the current state of the keyboard, 1 is pressed and 0 is not
     const Uint8* Keys = SDL_GetKeyboardState(nullptr);
-    LeftPlayer.SetMoveDirection(static_cast<float>(Keys[SDL_SCANCODE_S] - Keys[SDL_SCANCODE_W]));
-    RightPlayer.SetMoveDirection(static_cast<float>(Keys[SDL_SCANCODE_DOWN] - Keys[SDL_SCANCODE_UP]));
+    const float LeftKeys  = static_cast<float>(Keys[SDL_SCANCODE_S] - Keys[SDL_SCANCODE_W]);
+    const float RightKeys = static_cast<float>(Keys[SDL_SCANCODE_DOWN] - Keys[SDL_SCANCODE_UP]);
+    const float LeftPad   = LeftPlayer.ReadPadY();
+    const float RightPad  = RightPlayer.ReadPadY();
+    // Pad wins when it's being used; otherwise the keyboard
+    LeftPlayer.SetMoveDirection(LeftPad   != 0.0f ? LeftPad   : LeftKeys);
+    RightPlayer.SetMoveDirection(RightPad != 0.0f ? RightPad  : RightKeys);
 }
 
 void Game::UpdateGame(float DeltaTime){
@@ -336,6 +349,41 @@ void Game::UpdateOverlayStatus(){
     Overlay.SetStatus(1, Text);
 
 }
+
+void Game::CheckAudioEvents(){
+    for (const char* Path : AudioPaths::REQUIRED_EVENTS){
+        if(!Audio.HasEvent(Path)){
+           SDL_Log("Missing FMOD event: %s", Path);
+           Overlay.AddLine("Missing Audio Event - Please check Log");
+        }
+    }
+}
+
+void Game::AssignController(int DeviceIndex)
+{
+    if (!SDL_IsGameController(DeviceIndex)) {return;} // Is the device connected a gamepad?
+    const SDL_JoystickID ID = SDL_JoystickGetDeviceInstanceID(DeviceIndex); // What type is it?
+                                                                           
+    if (LeftPlayer.GetControllerID() == ID || RightPlayer.GetControllerID() == ID) {return;}
+    
+    Player *Target = !LeftPlayer.HasController() ? &LeftPlayer
+                   : !RightPlayer.HasController() ? &RightPlayer
+                   : nullptr;
+    if (!Target) {return;} // Both players have game pads
+    
+    SDL_GameController* Pad = SDL_GameControllerOpen(DeviceIndex);
+    if (!NullGuard(Pad, "SDL_GameControllerOpen")){return;}
+    Target->AssignController(Pad);
+    SDL_Log("Controller %s -> %s", SDL_GameControllerName(Pad), Target == &LeftPlayer ? "Left" : "Right");
+
+}
+
+void Game::RemoveController(SDL_JoystickID InstanceID)
+{
+    if(LeftPlayer.GetControllerID() == InstanceID){LeftPlayer.ReleaseController();}
+    if(RightPlayer.GetControllerID() == InstanceID){RightPlayer.ReleaseController();}
+}
+
 // SOUNDCHECK: Destructor, Initialize and Construction
 //
 // 1 Game Destructor //
