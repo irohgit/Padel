@@ -143,14 +143,17 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="DebugOverlay.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="LogListener.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MatchEvents.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SoundEvent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="Ball.h" />
     <ClInclude Include="DebugOverlay.h" />
     <ClInclude Include="Game.h" />
@@ -158,6 +161,7 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     <ClInclude Include="MatchEvents.h" />
     <ClInclude Include="PixelFont.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="SoundEvent.h" />
     <ClInclude Include="Theme.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
