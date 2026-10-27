@@ -10,6 +10,8 @@
 #include "LogListener.h"
 #include "DebugOverlay.h"
 #include "AudioSystem.h"
+#include "AudioDirector.h"
+
 
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
@@ -39,10 +41,12 @@ private:
     void ScorePoint(Player& Scorer, float ServeDirection);
     void SpawnPlayers();
     void UpdateGame(float DeltaTime);
+    void UpdateOverlayStatus();
 
     // PRODUCTION: What the show needs to run
     // What It Has
     AudioSystem Audio;
+    AudioDirector Director{Audio,1920.0f}; //C++ Builds members top to bottom and destroys them bottom to top.
     SDL_Window* Window = nullptr;
     SDL_Renderer* Renderer = nullptr;
 

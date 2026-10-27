@@ -27,10 +27,12 @@ bool SoundEvent::IsValid()
 void SoundEvent::Restart()
 {
 	auto event = mSystem ? mSystem->GetEventInstance(mID) : nullptr;
-	if (event)
-	{
-		event->start();
-	}
+	if (event) { event->start(); }
+}
+void SoundEvent::Start()
+{
+    auto event = mSystem ? mSystem->GetEventInstance(mID) : nullptr;
+    if (event){event->start();}
 }
 
 void SoundEvent::Stop(bool allowFadeOut /* true */)

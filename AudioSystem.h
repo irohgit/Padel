@@ -47,6 +47,7 @@ public:
     void UnloadAllBanks();
 
     SoundEvent PlayEvent(const std::string& name);
+    SoundEvent CreateEvent(const std::string& name);
 
     void Update(float deltaTime);
     

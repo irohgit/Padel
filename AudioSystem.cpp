@@ -50,14 +50,8 @@ bool AudioSystem::Initialize()
 		SDL_Log("Failed to initialize FMOD system: %s", FMOD_ErrorString(result));
 		return false;
 	}
-
 	// Save the core system pointer
 	mSystem->getCoreSystem(&mCoreSystem);
-
-	// Load the master banks (strings first)
-	//LoadBank("Assets/Master Bank.strings.bank");
-	//LoadBank("Assets/Master Bank.bank");
-
 	return true;
 }
 
@@ -234,6 +228,27 @@ SoundEvent AudioSystem::PlayEvent(const std::string& name)
 	}
 	return SoundEvent(this, retID);
 }
+SoundEvent AudioSystem::CreateEvent(const std::string& name)
+{
+	unsigned int retID = 0;
+	auto iter = mEvents.find(name);
+	if (iter != mEvents.end())
+	{
+		// Create instance of event
+		FMOD::Studio::EventInstance* event = nullptr;
+		iter->second->createInstance(&event);
+		if (event)
+		{
+			// Get the next id, and add to map
+			sNextID++;
+			retID = sNextID;
+			mEventInstances.emplace(retID, event);
+		}
+	}
+    else { SDL_Log("Event not found: %s", name.c_str()); }
+	return SoundEvent(this, retID);
+}
+
 
 void AudioSystem::Update(float deltaTime)
 {

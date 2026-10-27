@@ -143,6 +143,7 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioDirector.cpp" />
     <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="DebugOverlay.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -153,6 +154,7 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     <ClCompile Include="SoundEvent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioDirector.h" />
     <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="Ball.h" />
     <ClInclude Include="DebugOverlay.h" />

@@ -60,6 +60,12 @@ namespace{
     bool OverlapsVertically(float BallY, float PaddleY){
         return std::abs(BallY - PaddleY) <= PADDLE_HEIGHT/2.0f + BALL_SIZE /2.0f;
     }
+
+    const char* PanSide(float Pan){
+        if (Pan < -0.33f) return "LEFT";
+        if (Pan <  0.33f) return "CENTRE";
+        return "RIGHT";
+    }
     // Template for Drawing On Screen an Object with a root that is centered
     template <typename T>
     void DrawCentred(SDL_Renderer* Renderer, const T& Object, float Width, float Height){
@@ -100,6 +106,7 @@ namespace{
     std::mt19937& RandomEngine(){ static std::mt19937 Engine{ std::random_device{}() }; return Engine;}
     float RandomRange(float Min, float Max){std::uniform_real_distribution<float>Range(Min,Max); return Range(RandomEngine());}
     bool CoinFlip(){ return std::bernoulli_distribution(0.5)(RandomEngine());}
+    float NormalisedSpeed(float Velocity, float MaxSpeed){return std::clamp(std::abs(Velocity) / MaxSpeed,0.0f,1.0f);}
 
     // Debug and Development Helpers
     void checkSDLVersion(){SDL_version Version; SDL_GetVersion(&Version);SDL_Log("SDL: %d.%d.%d", Version.major, Version.minor, Version.patch);}
@@ -112,16 +119,22 @@ bool Game::Initialize(){
     bIsSdlStarted = true; // Successful Initiation  : record SDL start success bool
                           
     Window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WINDOW_WIDTH, WINDOW_HEIGHT,SDL_WINDOW_FULLSCREEN_DESKTOP);
+    // Window
     if (!NullGuard(Window, "SDL_CreateWindow")) return false;
-
+    // Renderer
     Renderer = SDL_CreateRenderer(Window,GRAPHICS_DRIVER,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     if (!NullGuard(Renderer, "SDL_CreateRenderer")) return false;
     if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
+    // Initialize Audio and Load Master Banks
     if (!Audio.Initialize()){return false;} // AudioSystem logs the FMOD error itself no need for SDL log        
+    Audio.LoadBank("Assets/Desktop/Master.strings.bank");
+    Audio.LoadBank("Assets/Desktop/Master.bank");
     LastCounter = SDL_GetPerformanceCounter(); 
     SpawnPlayers();
+    // Event Subscription
     Events.Subscribe(&Logger);
     Events.Subscribe(&Overlay);
+    Events.Subscribe(&Director);
     ServeBall(CoinFlip() ? 1.0f : -1.0f);
     bIsRunning = true;
 
@@ -148,6 +161,7 @@ void Game::ProcessInput(){
 void Game::UpdateGame(float DeltaTime){
     MovePlayers(DeltaTime);
     MoveBall(DeltaTime);
+    UpdateOverlayStatus();
     Audio.Update(DeltaTime);
 }
 void Game::GenerateOutput(){
@@ -233,12 +247,17 @@ void Game::MoveBall(float DeltaTime){
     Ball.Y += Ball.VelocityY * DeltaTime;
     //When the ball moves beyond the window top and bottom edges, place it back in and then reverse the y direction
     if(Ball.Y < BALL_MIN_Y){ Ball.Y = BALL_MIN_Y; Ball.VelocityY = -Ball.VelocityY;
-        Events.Publish({MatchEventType::WallBounce,CourtSide::None, Ball.X,Ball.Y});
+        Events.Publish({MatchEventType::WallBounce,
+                             CourtSide::None, 
+                             Ball.X,Ball.Y,
+                             NormalisedSpeed(Ball.VelocityY, BALL_MAX_SPEED_Y)});
     }
     else if(Ball.Y > BALL_MAX_Y){ Ball.Y = BALL_MAX_Y; Ball.VelocityY = -Ball.VelocityY;
-        Events.Publish({MatchEventType::WallBounce,CourtSide::None, Ball.X,Ball.Y});
+        Events.Publish({MatchEventType::WallBounce,
+                             CourtSide::None,
+                             Ball.X,Ball.Y,
+                             NormalisedSpeed(Ball.VelocityY,BALL_MAX_SPEED_Y)});
     }
-
     //Start checking for collisions only when Ball is in the HitZone
     if(Ball.X < HIT_ZONE || Ball.X > WINDOW_WIDTH - HIT_ZONE){ CheckPaddleHits(PreviousX);}
     if(Ball.X < 0.0f){ScorePoint(RightPlayer, -1.0f);}
@@ -300,8 +319,22 @@ void Game::ReturnBall(const PaddleState &Paddle, float ContactX){
     ++Rally;
 
     const CourtSide Hitter = (Ball.VelocityX > 0.0f) ? CourtSide::Left : CourtSide::Right;
-    const float Power = std::abs(Ball.VelocityX) / BALL_MAX_SPEED_X;
+    const float Power = NormalisedSpeed(Ball.VelocityX,BALL_MAX_SPEED_X);
     Events.Publish({MatchEventType::PaddleHit, Hitter,Ball.X,Ball.Y,Power,Rally});
+}
+
+void Game::UpdateOverlayStatus(){
+    char Text[48];
+
+    std::snprintf(Text, sizeof(Text), "WEIGHT: %s (%s)",
+                   Director.GetLastWeight(), 
+                   Director.GetLastSound());
+    Overlay.SetStatus(0,Text);
+
+    const float Pan = Director.PanFromX(Ball.X);
+    std::snprintf(Text, sizeof(Text), "PAN: %.2f %s", Pan, PanSide(Pan));
+    Overlay.SetStatus(1, Text);
+
 }
 // SOUNDCHECK: Destructor, Initialize and Construction
 //

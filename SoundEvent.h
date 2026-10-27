@@ -23,6 +23,8 @@ public:
 	bool IsValid();
 	// Restart event from beginning
 	void Restart();
+    // Start Event
+    void Start();
 	// Stop this event
 	void Stop(bool allowFadeOut = true);
 	// Setters
