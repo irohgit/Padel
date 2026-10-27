@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{d69ab399-888e-4fc0-b1aa-d3223b5782cd}">
+		<property name="assetPath">
+			<value>VO/Umpire/ump_thirty_tail_01.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>0.54697916666666668</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{c0e35698-f8ca-48ae-b21a-935e967693e8}</destination>
+		</relationship>
+	</object>
+</objects>

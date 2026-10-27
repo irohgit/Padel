@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{737c599d-3f70-4a90-85d0-90aa4a1e9b7c}">
+		<property name="name">
+			<value>Side</value>
+		</property>
+		<relationship name="folder">
+			<destination>{65ce51c4-a808-4dc2-b4a7-19c19c957c0a}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{c2d72412-5fc9-42cf-a05f-7f572b74c5b2}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{c2d72412-5fc9-42cf-a05f-7f572b74c5b2}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>2</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>left</value>
+			<value>right</value>
+		</property>
+		<property name="isHeld">
+			<value>true</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

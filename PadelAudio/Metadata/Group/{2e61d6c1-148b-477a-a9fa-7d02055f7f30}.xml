@@ -17,8 +17,80 @@
 	<object class="MixerBusEffectChain" id="{f8c9c8c3-7498-44b4-a55d-6b42eec4dc4f}">
 		<relationship name="effects">
 			<destination>{7856547d-4809-4e4e-be52-3c660acd4420}</destination>
+			<destination>{b7a8398b-03dc-49a8-9aea-4f58a9cb18bb}</destination>
+			<destination>{d8a6bdd7-215d-4a12-815d-6fa8380bb126}</destination>
+			<destination>{fbd59461-fa16-4649-9bac-fcca4d33d23f}</destination>
+			<destination>{c1bc4a43-f4c8-43b9-9234-310871c39cd8}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{715ac3ec-05b0-49fc-8429-3dc3cdf53fbe}" />
 	<object class="MixerBusFader" id="{7856547d-4809-4e4e-be52-3c660acd4420}" />
+	<object class="MultibandEqEffect" id="{b7a8398b-03dc-49a8-9aea-4f58a9cb18bb}">
+		<property name="filterTypeA">
+			<value>5</value>
+		</property>
+		<property name="filterTypeB">
+			<value>2</value>
+		</property>
+		<property name="filterTypeC">
+			<value>9</value>
+		</property>
+		<property name="frequencyA">
+			<value>300</value>
+		</property>
+		<property name="frequencyB">
+			<value>4500</value>
+		</property>
+		<property name="frequencyC">
+			<value>22000</value>
+		</property>
+		<property name="qualityA">
+			<value>0.654792964</value>
+		</property>
+		<property name="qualityC">
+			<value>1</value>
+		</property>
+		<property name="gainC">
+			<value>3</value>
+		</property>
+	</object>
+	<object class="DistortionEffect" id="{d8a6bdd7-215d-4a12-815d-6fa8380bb126}">
+		<property name="level">
+			<value>0.100000001</value>
+		</property>
+	</object>
+	<object class="DelayEffect" id="{fbd59461-fa16-4649-9bac-fcca4d33d23f}">
+		<property name="delay">
+			<value>120</value>
+		</property>
+		<property name="feedback">
+			<value>15</value>
+		</property>
+		<property name="level">
+			<value>-12</value>
+		</property>
+	</object>
+	<object class="SFXReverbEffect" id="{c1bc4a43-f4c8-43b9-9234-310871c39cd8}">
+		<property name="decayTime">
+			<value>2000</value>
+		</property>
+		<property name="earlyDelay">
+			<value>40</value>
+		</property>
+		<property name="lateDelay">
+			<value>60</value>
+		</property>
+		<property name="HFDecayRatio">
+			<value>40</value>
+		</property>
+		<property name="lowShelfGain">
+			<value>-6</value>
+		</property>
+		<property name="highCut">
+			<value>4000</value>
+		</property>
+		<property name="wetLevel">
+			<value>-12</value>
+		</property>
+	</object>
 </objects>

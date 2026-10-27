@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{2e3b9dd8-223e-4b89-81b9-0b4a132e6c19}">
+		<property name="assetPath">
+			<value>VO/Umpire/ump_all_01.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>0.42325000000000002</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{c0e35698-f8ca-48ae-b21a-935e967693e8}</destination>
+		</relationship>
+	</object>
+</objects>

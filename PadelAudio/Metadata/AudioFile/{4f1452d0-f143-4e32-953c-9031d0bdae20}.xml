@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{4f1452d0-f143-4e32-953c-9031d0bdae20}">
+		<property name="assetPath">
+			<value>VO/Umpire/ump_fifteen_lead_02.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>0.74883333333333335</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{c0e35698-f8ca-48ae-b21a-935e967693e8}</destination>
+		</relationship>
+	</object>
+</objects>
