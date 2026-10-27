@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="MixerGroup" id="{2e61d6c1-148b-477a-a9fa-7d02055f7f30}">
+		<property name="name">
+			<value>Umpire</value>
+		</property>
+		<relationship name="effectChain">
+			<destination>{f8c9c8c3-7498-44b4-a55d-6b42eec4dc4f}</destination>
+		</relationship>
+		<relationship name="panner">
+			<destination>{715ac3ec-05b0-49fc-8429-3dc3cdf53fbe}</destination>
+		</relationship>
+		<relationship name="output">
+			<destination>{b2152e6d-e48a-4312-b29c-0c3e0dd9f900}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusEffectChain" id="{f8c9c8c3-7498-44b4-a55d-6b42eec4dc4f}">
+		<relationship name="effects">
+			<destination>{7856547d-4809-4e4e-be52-3c660acd4420}</destination>
+		</relationship>
+	</object>
+	<object class="MixerBusPanner" id="{715ac3ec-05b0-49fc-8429-3dc3cdf53fbe}" />
+	<object class="MixerBusFader" id="{7856547d-4809-4e4e-be52-3c660acd4420}" />
+</objects>
