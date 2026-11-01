@@ -54,7 +54,7 @@ private:
     // PRODUCTION: What the show needs to run
     // What It Has
     AudioSystem Audio;
-    AudioDirector Director{Audio,1920.0f}; //C++ Builds members top to bottom and destroys them bottom to top.
+    AudioDirector Director{Audio,1920.0f}; //C++ Builds members top to bottom and destroys them bottom to top. [class.dtor](11.4.7) [basic.life](6.8.4.2)
     SoundEvent MenuMusic;
     SDL_Window* Window = nullptr;
     SDL_Renderer* Renderer = nullptr;
