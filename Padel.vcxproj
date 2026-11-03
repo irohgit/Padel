@@ -176,6 +176,7 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     <ClCompile Include="TitleSequence.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationTypes.h" />
     <ClInclude Include="AudioDirector.h" />
     <ClInclude Include="AudioPaths.h" />
     <ClInclude Include="AudioSystem.h" />
@@ -188,8 +189,10 @@ xcopy "C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows\api\studi
     <ClInclude Include="MenuScreen.h" />
     <ClInclude Include="PixelFont.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerFrames.h" />
     <ClInclude Include="SoundEvent.h" />
     <ClInclude Include="SpriteSheet.h" />
+    <ClInclude Include="TexturePaths.h" />
     <ClInclude Include="Theme.h" />
     <ClInclude Include="TitleSequence.h" />
   </ItemGroup>

@@ -107,20 +107,30 @@ namespace {
 TitleSequence::~TitleSequence(){ Release(); }
 
 bool TitleSequence::Load(SDL_Renderer* Renderer){
+    // Decode bitmap image
     SDL_Surface* Surface = SDL_LoadBMP(COURT_PATH);         // pixels in CPU memory
     if (!Surface){ SDL_Log("SDL_LoadBMP failed (%s): %s", COURT_PATH, SDL_GetError()); return false; }
 
+    // Upload (copy?) into GPU memory 
     Court = SDL_CreateTextureFromSurface(Renderer, Surface); // copy to the GPU
     CourtWidth  = Surface->w;
     CourtHeight = Surface->h;
-    SDL_FreeSurface(Surface);                                // the CPU copy is no longer needed
 
+    //Remember to free the cpu copy and give back memory to cpu
+    SDL_FreeSurface(Surface);                                // the CPU copy is no longer needed
+    
+    // Double check upload and return false if copy into gpu failed 
     if (!Court){ SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError()); return false; }
+
+    // Everythings all good... true bool
     return true;
 }
 
 void TitleSequence::Release(){
+    // Free Texture then wipe address and point court to nullptr
     if (Court){ SDL_DestroyTexture(Court); Court = nullptr; }
+    // Specifically it f
+    // extern DECLSPEC void SDLCALL SDL_DestroyTexture(SDL_Texture * texture);
 }
 
 void TitleSequence::Update(float DeltaTime){

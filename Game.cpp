@@ -9,6 +9,8 @@
 #include <optional>
 #include "PixelFont.h"
 #include "AudioPaths.h"
+#include "PlayerFrames.h"
+#include "TexturePaths.h"
 
 // SCORE: Namespace and Constants 
 namespace{
@@ -159,6 +161,8 @@ namespace{
     }
 }
 
+// Two-Phase Initialization: Post-Construction setup. Return false if initialization has failed.
+// Setup: 1. Video 2. Game Controller 3. Window 4. Renderer 5. Audio System 6. Players 7. Subscribe to Events. 
 bool Game::Initialize(){
     // 1. Start SDL: Ask, check, record pattern
     if (!SDLGuard(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER), "SDL_Init")) return false;// Success is zero as per SDL2 SDL_Init Documentation
@@ -171,8 +175,10 @@ bool Game::Initialize(){
     Renderer = SDL_CreateRenderer(Window,GRAPHICS_DRIVER,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     if (!NullGuard(Renderer, "SDL_CreateRenderer")) return false;
     if (!SDLGuard(SDL_RenderSetLogicalSize(Renderer, WINDOW_WIDTH,WINDOW_HEIGHT), "SDL_RenderSetLogicalSize")) return false;
-    // Load Title Screen
+    // Load Title Screen and SpriteSheet
     if (!Title.Load(Renderer)) return false;
+    //Optional Art: On Failure, SpriteSheet stays empty and paddles will draw.
+    AlexSheet.LoadTextureData(Renderer,TexturePaths::ALEX_SHEET,ALEX_FRAMES,ALEX_FRAME_COUNT);
     // Initialize Audio and Load Master Banks
     if (!Audio.Initialize()){return false;} // AudioSystem logs the FMOD error itself no need for SDL log        
     Audio.LoadBank(AudioPaths::MASTER_STRINGS_BANK);
@@ -187,10 +193,8 @@ bool Game::Initialize(){
     Events.Subscribe(&Director);
     ServeBall(CoinFlip() ? 1.0f : -1.0f);
     bIsRunning = true;
-
     // Temporary Helper for upgrade - Delete for production
     checkSDLVersion();
-
     return true;
 }
 void Game::ProcessInput(){
@@ -266,7 +270,14 @@ void Game::GenerateOutput(){
     Theme::SetDrawColor(Renderer, Theme::Color::PADDLE);
     DrawCentred(Renderer, LeftPlayer.GetPaddle(), PADDLE_WIDTH,PADDLE_HEIGHT);
     DrawCentred(Renderer, RightPlayer.GetPaddle(), PADDLE_WIDTH,PADDLE_HEIGHT);
-
+    
+    // Draw Characters
+    if(AlexSheet.GetTexture()){
+        const SDL_Rect *Frame = AlexSheet.GetFrame(0);
+        const PaddleState &Pad = LeftPlayer.GetPaddle();
+        const SDL_FRect DestinationRect = {Pad.X - Frame->w/2.0f,Pad.Y - Frame->h/2.0f, static_cast<float>(Frame->w), static_cast<float>(Frame->h)};
+        SDL_RenderCopyExF(Renderer,AlexSheet.GetTexture(),Frame,&DestinationRect,0.0,nullptr,SDL_FLIP_NONE); //TODO make the flip dependent on player side
+    }
     // Draw Ball
     Theme::SetDrawColor(Renderer, Theme::Color::BALL);
     DrawCentred(Renderer, Ball, BALL_SIZE, BALL_SIZE); 
@@ -293,6 +304,7 @@ void Game::ShutDown(){// Ensure order of shutdown is Renderer, Window and the Ga
     LeftPlayer.ReleaseController();
     RightPlayer.ReleaseController();
     Title.Release();
+    AlexSheet.Release();
     Audio.ShutDown();
     Release(Renderer, SDL_DestroyRenderer);//1. Renderer: If It exists,destroy the Renderer
     Release(Window, SDL_DestroyWindow);//2. Window: If it exists, destroy the Window

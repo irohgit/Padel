@@ -13,6 +13,7 @@
 #include "AudioDirector.h"
 #include "TitleSequence.h"
 #include "MainMenu.h"
+#include "SpriteSheet.h"
 
 
 //PROGRAMME - Who's in tonight's show and what they can do. How they play the music is in Game.cpp
@@ -59,6 +60,7 @@ private:
     SDL_Window* Window = nullptr;
     SDL_Renderer* Renderer = nullptr;
     TitleSequence Title;
+    SpriteSheet AlexSheet;
     MainMenu Menu;
     GameState State = GameState::Title;
 
